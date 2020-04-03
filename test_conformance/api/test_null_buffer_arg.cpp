@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,12 +27,22 @@
 #include "procs.h"
 
 
-enum { SUCCESS, FAILURE };
-typedef enum { NON_NULL_PATH, ADDROF_NULL_PATH, NULL_PATH } test_type;
+enum
+{
+    SUCCESS,
+    FAILURE
+};
+typedef enum
+{
+    NON_NULL_PATH,
+    ADDROF_NULL_PATH,
+    NULL_PATH
+} test_type;
 
 #define NITEMS 4096
 
-/* places the comparison result of value of the src ptr against 0 into each element of the output
+/* places the comparison result of value of the src ptr against 0 into each
+ * element of the output
  * array, to allow testing that the kernel actually _gets_ the NULL value */
 const char *kernel_string_long =
 "kernel void test_kernel(global float *src, global long *dst)\n"
@@ -56,7 +66,8 @@ const char *kernel_string =
  * the value of 'test_type'
  */
 static int test_setargs_and_execution(cl_command_queue queue, cl_kernel kernel,
-    cl_mem test_buf, cl_mem result_buf, test_type type)
+                                      cl_mem test_buf, cl_mem result_buf,
+                                      test_type type)
 {
     unsigned int test_success = 0;
 
@@ -64,50 +75,69 @@ static int test_setargs_and_execution(cl_command_queue queue, cl_kernel kernel,
     cl_int status;
     char *typestr;
 
-    if (type == NON_NULL_PATH) {
+    if (type == NON_NULL_PATH)
+    {
         status = clSetKernelArg(kernel, 0, sizeof(cl_mem), &test_buf);
         typestr = "non-NULL";
-    } else if (type == ADDROF_NULL_PATH) {
+    }
+    else if (type == ADDROF_NULL_PATH)
+    {
         test_buf = NULL;
         status = clSetKernelArg(kernel, 0, sizeof(cl_mem), &test_buf);
         typestr = "&NULL";
-    } else if (type == NULL_PATH) {
+    }
+    else if (type == NULL_PATH)
+    {
         status = clSetKernelArg(kernel, 0, sizeof(cl_mem), NULL);
         typestr = "NULL";
     }
 
     log_info("Testing setKernelArgs with %s buffer.\n", typestr);
 
-    if (status != CL_SUCCESS) {
+    if (status != CL_SUCCESS)
+    {
         log_error("clSetKernelArg failed with status: %d\n", status);
         return FAILURE; // no point in continuing *this* test
     }
 
     size_t global = NITEMS;
-    status = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global,
-        NULL, 0, NULL, NULL);
+    status = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0,
+                                    NULL, NULL);
     test_error(status, "NDRangeKernel failed.");
 
     if (gIsEmbedded)
     {
-        cl_int* host_result = (cl_int*)malloc(NITEMS*sizeof(cl_int));
+        cl_int *host_result = (cl_int *)malloc(NITEMS * sizeof(cl_int));
         status = clEnqueueReadBuffer(queue, result_buf, CL_TRUE, 0,
-                                     sizeof(cl_int)*NITEMS, host_result, 0, NULL, NULL);
+                                     sizeof(cl_int) * NITEMS, host_result, 0,
+                                     NULL, NULL);
         test_error(status, "ReadBuffer failed.");
         // in the non-null case, we expect NONZERO values:
-        if (type == NON_NULL_PATH) {
-            for (i=0; i<NITEMS; i++) {
-                if (host_result[i] == 0) {
-                    log_error("failure: item %d in the result buffer was unexpectedly NULL.\n", i);
-                    test_success = FAILURE; break;
+        if (type == NON_NULL_PATH)
+        {
+            for (i = 0; i < NITEMS; i++)
+            {
+                if (host_result[i] == 0)
+                {
+                    log_error("failure: item %d in the result buffer was "
+                              "unexpectedly NULL.\n",
+                              i);
+                    test_success = FAILURE;
+                    break;
                 }
             }
-
-        } else if (type == ADDROF_NULL_PATH || type == NULL_PATH) {
-            for (i=0; i<NITEMS; i++) {
-                if (host_result[i] != 0) {
-                    log_error("failure: item %d in the result buffer was unexpectedly non-NULL.\n", i);
-                    test_success = FAILURE; break;
+        }
+        else if (type == ADDROF_NULL_PATH || type == NULL_PATH)
+        {
+            for (i = 0; i < NITEMS; i++)
+            {
+                if (host_result[i] != 0)
+                {
+                    log_error("failure: item %d in the result buffer was "
+                              "unexpectedly non-NULL.\n",
+                              i);
+                    test_success = FAILURE;
+                    break;
                 }
             }
         }
@@ -115,30 +145,45 @@ static int test_setargs_and_execution(cl_command_queue queue, cl_kernel kernel,
     }
     else
     {
-    cl_long* host_result = (cl_long*)malloc(NITEMS*sizeof(cl_long));
-    status = clEnqueueReadBuffer(queue, result_buf, CL_TRUE, 0,
-        sizeof(cl_long)*NITEMS, host_result, 0, NULL, NULL);
-    test_error(status, "ReadBuffer failed.");
-    // in the non-null case, we expect NONZERO values:
-    if (type == NON_NULL_PATH) {
-        for (i=0; i<NITEMS; i++) {
-            if (host_result[i] == 0) {
-                log_error("failure: item %d in the result buffer was unexpectedly NULL.\n", i);
-                test_success = FAILURE; break;
+        cl_long *host_result = (cl_long *)malloc(NITEMS * sizeof(cl_long));
+        status = clEnqueueReadBuffer(queue, result_buf, CL_TRUE, 0,
+                                     sizeof(cl_long) * NITEMS, host_result, 0,
+                                     NULL, NULL);
+        test_error(status, "ReadBuffer failed.");
+        // in the non-null case, we expect NONZERO values:
+        if (type == NON_NULL_PATH)
+        {
+            for (i = 0; i < NITEMS; i++)
+            {
+                if (host_result[i] == 0)
+                {
+                    log_error("failure: item %d in the result buffer was "
+                              "unexpectedly NULL.\n",
+                              i);
+                    test_success = FAILURE;
+                    break;
+                }
             }
         }
-    } else if (type == ADDROF_NULL_PATH || type == NULL_PATH) {
-        for (i=0; i<NITEMS; i++) {
-            if (host_result[i] != 0) {
-                log_error("failure: item %d in the result buffer was unexpectedly non-NULL.\n", i);
-                test_success = FAILURE; break;
+        else if (type == ADDROF_NULL_PATH || type == NULL_PATH)
+        {
+            for (i = 0; i < NITEMS; i++)
+            {
+                if (host_result[i] != 0)
+                {
+                    log_error("failure: item %d in the result buffer was "
+                              "unexpectedly non-NULL.\n",
+                              i);
+                    test_success = FAILURE;
+                    break;
+                }
             }
         }
-    }
-    free(host_result);
+        free(host_result);
     }
 
-    if (test_success == SUCCESS) {
+    if (test_success == SUCCESS)
+    {
         log_info("\t%s ok.\n", typestr);
     }
 
@@ -146,7 +191,7 @@ static int test_setargs_and_execution(cl_command_queue queue, cl_kernel kernel,
 }
 
 int test_null_buffer_arg(cl_device_id device, cl_context context,
-    cl_command_queue queue, int num_elements)
+                         cl_command_queue queue, int num_elements)
 {
     unsigned int test_success = 0;
     unsigned int i;
@@ -157,25 +202,27 @@ int test_null_buffer_arg(cl_device_id device, cl_context context,
 
     // prep kernel:
     if (gIsEmbedded)
-        status = create_single_kernel_helper(context, &program, NULL, 1, &kernel_string, NULL);
+        status = create_single_kernel_helper(context, &program, NULL, 1,
+                                             &kernel_string, NULL);
     else
-        status = create_single_kernel_helper(context, &program, NULL, 1, &kernel_string_long, NULL);
+        status = create_single_kernel_helper(context, &program, NULL, 1,
+                                             &kernel_string_long, NULL);
 
     test_error(status, "Unable to build test program");
 
     kernel = clCreateKernel(program, "test_kernel", &status);
     test_error(status, "CreateKernel failed.");
 
-    cl_mem dev_src = clCreateBuffer(context, CL_MEM_READ_ONLY, NITEMS*sizeof(cl_float),
-        NULL, NULL);
+    cl_mem dev_src = clCreateBuffer(context, CL_MEM_READ_ONLY,
+                                    NITEMS * sizeof(cl_float), NULL, NULL);
 
     if (gIsEmbedded)
-        buffer_size = NITEMS*sizeof(cl_int);
+        buffer_size = NITEMS * sizeof(cl_int);
     else
-        buffer_size = NITEMS*sizeof(cl_long);
+        buffer_size = NITEMS * sizeof(cl_long);
 
-    cl_mem dev_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size,
-        NULL, NULL);
+    cl_mem dev_dst =
+    clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size, NULL, NULL);
 
     // set the destination buffer normally:
     status = clSetKernelArg(kernel, 1, sizeof(cl_mem), &dev_dst);
@@ -189,11 +236,14 @@ int test_null_buffer_arg(cl_device_id device, cl_context context,
     // - the case of src as NULL (the backwards-compatibility test, Apple only)
     //
 
-    test_success  = test_setargs_and_execution(queue, kernel, dev_src, dev_dst, NON_NULL_PATH);
-    test_success |= test_setargs_and_execution(queue, kernel, dev_src, dev_dst, ADDROF_NULL_PATH);
+    test_success =
+    test_setargs_and_execution(queue, kernel, dev_src, dev_dst, NON_NULL_PATH);
+    test_success |= test_setargs_and_execution(queue, kernel, dev_src, dev_dst,
+                                               ADDROF_NULL_PATH);
 
 #ifdef __APPLE__
-    test_success |= test_setargs_and_execution(queue, kernel, dev_src, dev_dst, NULL_PATH);
+    test_success |=
+    test_setargs_and_execution(queue, kernel, dev_src, dev_dst, NULL_PATH);
 #endif
 
     // clean up:

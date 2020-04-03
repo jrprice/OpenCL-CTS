@@ -18,7 +18,7 @@ executed between Khronos and the recipient.
 #ifndef _CRC32_H_
 #define _CRC32_H_
 
-#include <stdint.h> 
+#include <stdint.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

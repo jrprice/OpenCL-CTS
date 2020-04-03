@@ -21,8 +21,6 @@
 #endif
 
 
-
-
 const char *known_extensions[] = {
     "cl_khr_byte_addressable_store",
     "cl_khr_3d_image_writes",
@@ -45,7 +43,8 @@ const char *known_extensions[] = {
     "cl_khr_srgb_image_writes",
     "cl_khr_subgroup_named_barrier",
 
-    //API-only extensions after this point.  If you add above here, modify first_API_extension below.
+    // API-only extensions after this point.  If you add above here, modify
+    // first_API_extension below.
     "cl_khr_icd",
     "cl_khr_gl_sharing",
     "cl_khr_gl_event",
@@ -66,13 +65,10 @@ const char *known_extensions[] = {
     "cl_khr_extended_versioning",
 };
 
-size_t num_known_extensions = sizeof(known_extensions)/sizeof(char*);
+size_t num_known_extensions = sizeof(known_extensions) / sizeof(char *);
 size_t first_API_extension = 20;
 
-const char *known_embedded_extensions[] = {
-    "cles_khr_int64",
-    NULL
-};
+const char *known_embedded_extensions[] = { "cles_khr_int64", NULL };
 
 typedef enum
 {
@@ -80,21 +76,21 @@ typedef enum
     kVendor_extension = 0,
     kLanguage_extension = 1,
     kAPI_extension = 2
-}Extension_Type;
+} Extension_Type;
 
-const char *kernel_strings[] = {
-    "kernel void test(global int *defines)\n{\n",
-    "#pragma OPENCL EXTENSION %s : enable\n",
-    "#ifdef %s\n"
-    "  defines[%d] = 1;\n"
-    "#else\n"
-    "  defines[%d] = 0;\n"
-    "#endif\n",
-    "#pragma OPENCL EXTENSION %s : disable\n\n",
-    "}\n"
-};
+const char *kernel_strings[] = { "kernel void test(global int *defines)\n{\n",
+                                 "#pragma OPENCL EXTENSION %s : enable\n",
+                                 "#ifdef %s\n"
+                                 "  defines[%d] = 1;\n"
+                                 "#else\n"
+                                 "  defines[%d] = 0;\n"
+                                 "#endif\n",
+                                 "#pragma OPENCL EXTENSION %s : disable\n\n",
+                                 "}\n" };
 
-int test_compiler_defines_for_extensions(cl_device_id device, cl_context context, cl_command_queue queue, int n_elems )
+int test_compiler_defines_for_extensions(cl_device_id device,
+                                         cl_context context,
+                                         cl_command_queue queue, int n_elems)
 {
 
     int error;
@@ -106,29 +102,35 @@ int test_compiler_defines_for_extensions(cl_device_id device, cl_context context
     error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 0, NULL, &size);
     test_error(error, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS size failed");
 
-    char *extensions = (char*)malloc(sizeof(char)*(size + 1));
-    if (extensions == 0) {
+    char *extensions = (char *)malloc(sizeof(char) * (size + 1));
+    if (extensions == 0)
+    {
         log_error("Failed to allocate memory for extensions string.\n");
         return -1;
     }
-    memset( extensions, CHAR_MIN, sizeof(char)*(size+1) );
+    memset(extensions, CHAR_MIN, sizeof(char) * (size + 1));
 
-    error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, sizeof(char)*size, extensions, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, sizeof(char) * size,
+                            extensions, NULL);
     test_error(error, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS failed");
 
     // Check to make sure the extension string is NUL terminated.
-    if( extensions[size] != CHAR_MIN )
+    if (extensions[size] != CHAR_MIN)
     {
-        test_error( -1, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS wrote past the end of the array!" );
+        test_error(-1,
+                   "clGetDeviceInfo for CL_DEVICE_EXTENSIONS wrote past the "
+                   "end of the array!");
         return -1;
     }
-    extensions[size] = '\0';    // set last char to NUL to avoid problems with string functions later
+    extensions[size] =
+    '\0'; // set last char to NUL to avoid problems with string functions later
 
     // test for termination with '\0'
-    size_t stringSize = strlen( extensions );
-    if( stringSize == size )
+    size_t stringSize = strlen(extensions);
+    if (stringSize == size)
     {
-        test_error( -1, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS is not NUL terminated!" );
+        test_error(
+        -1, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS is not NUL terminated!");
         return -1;
     }
 
@@ -139,124 +141,152 @@ int test_compiler_defines_for_extensions(cl_device_id device, cl_context context
     int num_of_supported_extensions = 0;
     char *currentP = extensions;
 
-    memset( extension_type, 0, sizeof( extension_type) );
+    memset(extension_type, 0, sizeof(extension_type));
 
     // loop over extension string
     while (currentP != extensions + stringSize)
     {
         // skip leading white space
-        while( *currentP == ' ' )
-            currentP++;
+        while (*currentP == ' ') currentP++;
 
         // Exit if end of string
-        if( *currentP == '\0' )
+        if (*currentP == '\0')
         {
-            if( currentP != extensions + stringSize)
+            if (currentP != extensions + stringSize)
             {
-                test_error( -1, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS contains a NUL in the middle of the string!" );
+                test_error(-1,
+                           "clGetDeviceInfo for CL_DEVICE_EXTENSIONS contains "
+                           "a NUL in the middle of the string!");
                 return -1;
             }
             break;
         }
 
         // Not space, not end of string, so extension
-        char *start = currentP;             // start of extension name
+        char *start = currentP; // start of extension name
 
         // loop looking for the end
         while (*currentP != ' ' && currentP != extensions + stringSize)
         {
             // check for non-space white space in the extension name
-            if( isspace(*currentP) )
+            if (isspace(*currentP))
             {
-                test_error( -1, "clGetDeviceInfo for CL_DEVICE_EXTENSIONS contains a non-space whitespace in an extension name!" );
+                test_error(-1,
+                           "clGetDeviceInfo for CL_DEVICE_EXTENSIONS contains "
+                           "a non-space whitespace in an extension name!");
                 return -1;
             }
             currentP++;
         }
 
         // record the extension name
-        uintptr_t extension_length = (uintptr_t) currentP - (uintptr_t) start;
-        extensions_supported[ num_of_supported_extensions ] = (char*) malloc( (extension_length + 1) * sizeof( char ) );
-        if( NULL == extensions_supported[ num_of_supported_extensions ] )
+        uintptr_t extension_length = (uintptr_t)currentP - (uintptr_t)start;
+        extensions_supported[num_of_supported_extensions] =
+        (char *)malloc((extension_length + 1) * sizeof(char));
+        if (NULL == extensions_supported[num_of_supported_extensions])
         {
-            log_error( "Error: unable to allocate memory to hold extension name: %ld chars\n", extension_length );
+            log_error("Error: unable to allocate memory to hold extension "
+                      "name: %ld chars\n",
+                      extension_length);
             return -1;
         }
-        memcpy( extensions_supported[ num_of_supported_extensions ], start, extension_length * sizeof( char ) );
-        extensions_supported[ num_of_supported_extensions ][extension_length] = '\0';
+        memcpy(extensions_supported[num_of_supported_extensions], start,
+               extension_length * sizeof(char));
+        extensions_supported[num_of_supported_extensions][extension_length] =
+        '\0';
 
-        // If the extension is a cl_khr extension, make sure it is an approved cl_khr extension -- looking for misspellings here
-        if( extensions_supported[ num_of_supported_extensions ][0] == 'c'  &&
-            extensions_supported[ num_of_supported_extensions ][1] == 'l'  &&
-            extensions_supported[ num_of_supported_extensions ][2] == '_'  &&
-            extensions_supported[ num_of_supported_extensions ][3] == 'k'  &&
-            extensions_supported[ num_of_supported_extensions ][4] == 'h'  &&
-            extensions_supported[ num_of_supported_extensions ][5] == 'r'  &&
-            extensions_supported[ num_of_supported_extensions ][6] == '_' )
+        // If the extension is a cl_khr extension, make sure it is an approved
+        // cl_khr extension -- looking for misspellings here
+        if (extensions_supported[num_of_supported_extensions][0] == 'c'
+            && extensions_supported[num_of_supported_extensions][1] == 'l'
+            && extensions_supported[num_of_supported_extensions][2] == '_'
+            && extensions_supported[num_of_supported_extensions][3] == 'k'
+            && extensions_supported[num_of_supported_extensions][4] == 'h'
+            && extensions_supported[num_of_supported_extensions][5] == 'r'
+            && extensions_supported[num_of_supported_extensions][6] == '_')
         {
             size_t ii;
-            for( ii = 0; ii < num_known_extensions; ii++ )
+            for (ii = 0; ii < num_known_extensions; ii++)
             {
-                if( 0 == strcmp( known_extensions[ii], extensions_supported[ num_of_supported_extensions ] ) )
+                if (0
+                    == strcmp(
+                    known_extensions[ii],
+                    extensions_supported[num_of_supported_extensions]))
                     break;
             }
-            if( ii == num_known_extensions )
+            if (ii == num_known_extensions)
             {
-                log_error( "FAIL: Extension %s is not in the list of approved Khronos extensions!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL: Extension %s is not in the list of approved "
+                          "Khronos extensions!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
         }
         // Is it an embedded extension?
-        else if( memcmp( extensions_supported[ num_of_supported_extensions ], "cles_khr_", 9 ) == 0 )
+        else if (memcmp(extensions_supported[num_of_supported_extensions],
+                        "cles_khr_", 9)
+                 == 0)
         {
             // Yes, but is it a known one?
             size_t ii;
-            for( ii = 0; known_embedded_extensions[ ii ] != NULL; ii++ )
+            for (ii = 0; known_embedded_extensions[ii] != NULL; ii++)
             {
-                if( strcmp( known_embedded_extensions[ ii ], extensions_supported[ num_of_supported_extensions ] ) == 0 )
+                if (strcmp(known_embedded_extensions[ii],
+                           extensions_supported[num_of_supported_extensions])
+                    == 0)
                     break;
             }
-            if( known_embedded_extensions[ ii ] == NULL )
+            if (known_embedded_extensions[ii] == NULL)
             {
-                log_error( "FAIL: Extension %s is not in the list of approved Khronos embedded extensions!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL: Extension %s is not in the list of approved "
+                          "Khronos embedded extensions!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
 
             // It's approved, but are we even an embedded system?
             char profileStr[128] = "";
-            error = clGetDeviceInfo( device, CL_DEVICE_PROFILE, sizeof( profileStr ), &profileStr, NULL );
-            test_error( error, "Unable to get CL_DEVICE_PROFILE to validate embedded extension name" );
+            error = clGetDeviceInfo(device, CL_DEVICE_PROFILE,
+                                    sizeof(profileStr), &profileStr, NULL);
+            test_error(error,
+                       "Unable to get CL_DEVICE_PROFILE to validate embedded "
+                       "extension name");
 
-            if( strcmp( profileStr, "EMBEDDED_PROFILE" ) != 0 )
+            if (strcmp(profileStr, "EMBEDDED_PROFILE") != 0)
             {
-                log_error( "FAIL: Extension %s is an approved embedded extension, but on a non-embedded profile!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL: Extension %s is an approved embedded "
+                          "extension, but on a non-embedded profile!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
         }
         else
         { // All other extensions must be of the form cl_<vendor_name>_<name>
-            if( extensions_supported[ num_of_supported_extensions ][0] != 'c'  ||
-                extensions_supported[ num_of_supported_extensions ][1] != 'l'  ||
-                extensions_supported[ num_of_supported_extensions ][2] != '_' )
+            if (extensions_supported[num_of_supported_extensions][0] != 'c'
+                || extensions_supported[num_of_supported_extensions][1] != 'l'
+                || extensions_supported[num_of_supported_extensions][2] != '_')
             {
-                log_error( "FAIL:  Extension %s doesn't start with \"cl_\"!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL:  Extension %s doesn't start with \"cl_\"!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
 
-            if( extensions_supported[ num_of_supported_extensions ][3] == '_' || extensions_supported[ num_of_supported_extensions ][3] == '\0' )
+            if (extensions_supported[num_of_supported_extensions][3] == '_'
+                || extensions_supported[num_of_supported_extensions][3] == '\0')
             {
-                log_error( "FAIL:  Vendor name is missing in extension %s!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL:  Vendor name is missing in extension %s!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
 
             // look for the second underscore for name
-            char *p = extensions_supported[ num_of_supported_extensions ] + 4;
-            while( *p != '\0' && *p != '_' )
-                p++;
+            char *p = extensions_supported[num_of_supported_extensions] + 4;
+            while (*p != '\0' && *p != '_') p++;
 
-            if( *p != '_' || p[1] == '\0')
+            if (*p != '_' || p[1] == '\0')
             {
-                log_error( "FAIL:  extension name is missing in extension %s!", extensions_supported[ num_of_supported_extensions ] );
+                log_error("FAIL:  extension name is missing in extension %s!",
+                          extensions_supported[num_of_supported_extensions]);
                 return -1;
             }
         }
@@ -268,62 +298,80 @@ int test_compiler_defines_for_extensions(cl_device_id device, cl_context context
     // Build a list of the known extensions that are not supported by the device
     char *extensions_not_supported[1024];
     int num_not_supported_extensions = 0;
-    for( int i = 0; i < num_of_supported_extensions; i++ )
+    for (int i = 0; i < num_of_supported_extensions; i++)
     {
         int is_supported = 0;
-        for( size_t j = 0; j < num_known_extensions; j++ )
+        for (size_t j = 0; j < num_known_extensions; j++)
+        {
+            if (strcmp(extensions_supported[i], known_extensions[j]) == 0)
             {
-            if( strcmp( extensions_supported[ i ], known_extensions[ j ] ) == 0 )
-            {
-                extension_type[ i ] = ( j < first_API_extension ) ? kLanguage_extension : kAPI_extension;
+                extension_type[i] = (j < first_API_extension)
+                ? kLanguage_extension
+                : kAPI_extension;
                 is_supported = 1;
                 break;
             }
         }
-        if( !is_supported )
+        if (!is_supported)
         {
-            for( int j = 0; known_embedded_extensions[ j ] != NULL; j++ )
+            for (int j = 0; known_embedded_extensions[j] != NULL; j++)
             {
-                if( strcmp( extensions_supported[ i ], known_embedded_extensions[ j ] ) == 0 )
+                if (strcmp(extensions_supported[i],
+                           known_embedded_extensions[j])
+                    == 0)
                 {
-                    extension_type[ i ] = kLanguage_extension;
+                    extension_type[i] = kLanguage_extension;
                     is_supported = 1;
                     break;
                 }
             }
         }
-        if (!is_supported) {
-            extensions_not_supported[num_not_supported_extensions] = (char*)malloc(strlen(extensions_supported[i])+1);
-            strcpy(extensions_not_supported[num_not_supported_extensions], extensions_supported[i]);
+        if (!is_supported)
+        {
+            extensions_not_supported[num_not_supported_extensions] =
+            (char *)malloc(strlen(extensions_supported[i]) + 1);
+            strcpy(extensions_not_supported[num_not_supported_extensions],
+                   extensions_supported[i]);
             num_not_supported_extensions++;
         }
     }
 
-    for (int i=0; i<num_of_supported_extensions; i++) {
+    for (int i = 0; i < num_of_supported_extensions; i++)
+    {
         log_info("%40s -- Supported\n", extensions_supported[i]);
     }
-    for (int i=0; i<num_not_supported_extensions; i++) {
+    for (int i = 0; i < num_not_supported_extensions; i++)
+    {
         log_info("%40s -- Not Supported\n", extensions_not_supported[i]);
     }
 
     // Build the kernel
-    char *kernel_code = (char*)malloc(1025*256*(num_not_supported_extensions+num_of_supported_extensions));
-    memset(kernel_code, 0, 1025*256*(num_not_supported_extensions+num_of_supported_extensions));
+    char *kernel_code = (char *)malloc(
+    1025 * 256 * (num_not_supported_extensions + num_of_supported_extensions));
+    memset(kernel_code, 0,
+           1025 * 256
+           * (num_not_supported_extensions + num_of_supported_extensions));
 
     int i, index = 0;
     strcat(kernel_code, kernel_strings[0]);
-    for (i=0; i<num_of_supported_extensions; i++, index++) {
+    for (i = 0; i < num_of_supported_extensions; i++, index++)
+    {
 
         if (extension_type[i] == kLanguage_extension)
-            sprintf(kernel_code + strlen(kernel_code), kernel_strings[1], extensions_supported[i]);
+            sprintf(kernel_code + strlen(kernel_code), kernel_strings[1],
+                    extensions_supported[i]);
 
-        sprintf(kernel_code + strlen(kernel_code), kernel_strings[2], extensions_supported[i], index, index );
+        sprintf(kernel_code + strlen(kernel_code), kernel_strings[2],
+                extensions_supported[i], index, index);
 
         if (extension_type[i] == kLanguage_extension)
-            sprintf(kernel_code + strlen(kernel_code), kernel_strings[3], extensions_supported[i] );
+            sprintf(kernel_code + strlen(kernel_code), kernel_strings[3],
+                    extensions_supported[i]);
     }
-    for ( i = 0; i<num_not_supported_extensions; i++, index++) {
-        sprintf(kernel_code + strlen(kernel_code), kernel_strings[2], extensions_not_supported[i], index, index );
+    for (i = 0; i < num_not_supported_extensions; i++, index++)
+    {
+        sprintf(kernel_code + strlen(kernel_code), kernel_strings[2],
+                extensions_not_supported[i], index, index);
     }
     strcat(kernel_code, kernel_strings[4]);
 
@@ -338,83 +386,105 @@ int test_compiler_defines_for_extensions(cl_device_id device, cl_context context
     error = get_device_version(device, &major, &minor);
     test_error(error, "get_device_version failed");
 
-    error = create_single_kernel_helper(context, &program, &kernel, 1, (const char **)&kernel_code, "test", major < 2 ? "" : "-cl-std=CL2.0");
+    error = create_single_kernel_helper(context, &program, &kernel, 1,
+                                        (const char **)&kernel_code, "test",
+                                        major < 2 ? "" : "-cl-std=CL2.0");
     test_error(error, "create_single_kernel_helper failed");
 
-    data = (cl_int*)malloc(sizeof(cl_int)*(num_not_supported_extensions+num_of_supported_extensions));
-    memset(data, 0, sizeof(cl_int)*(num_not_supported_extensions+num_of_supported_extensions));
-    defines = clCreateBuffer(context, CL_MEM_COPY_HOST_PTR,
-                             sizeof(cl_int)*(num_not_supported_extensions+num_of_supported_extensions), data, &error);
+    data = (cl_int *)malloc(
+    sizeof(cl_int)
+    * (num_not_supported_extensions + num_of_supported_extensions));
+    memset(data, 0,
+           sizeof(cl_int)
+           * (num_not_supported_extensions + num_of_supported_extensions));
+    defines = clCreateBuffer(
+    context, CL_MEM_COPY_HOST_PTR,
+    sizeof(cl_int)
+    * (num_not_supported_extensions + num_of_supported_extensions),
+    data, &error);
     test_error(error, "clCreateBuffer failed");
 
     error = clSetKernelArg(kernel, 0, sizeof(defines), &defines);
     test_error(error, "clSetKernelArg failed");
 
     size_t global_size = 1;
-    error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, NULL, 0, NULL, NULL);
+    error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, NULL,
+                                   0, NULL, NULL);
     test_error(error, "clEnqueueNDRangeKernel failed");
 
-    error = clEnqueueReadBuffer(queue, defines, CL_TRUE, 0, sizeof(cl_int)*(num_not_supported_extensions+num_of_supported_extensions),
-                                data, 0, NULL, NULL);
+    error = clEnqueueReadBuffer(
+    queue, defines, CL_TRUE, 0,
+    sizeof(cl_int)
+    * (num_not_supported_extensions + num_of_supported_extensions),
+    data, 0, NULL, NULL);
     test_error(error, "clEnqueueReadBuffer failed");
 
     // Report what the compiler reported
-    log_info("\nCompiler reported the following extensions defined in the OpenCL C kernel environment:\n");
+    log_info("\nCompiler reported the following extensions defined in the "
+             "OpenCL C kernel environment:\n");
     index = 0;
     int total_supported = 0;
-    for (int i=0; i<num_of_supported_extensions; i++, index++) {
-        if (data[index] == 1) {
+    for (int i = 0; i < num_of_supported_extensions; i++, index++)
+    {
+        if (data[index] == 1)
+        {
             log_info("\t%s\n", extensions_supported[i]);
             total_supported++;
         }
     }
-    for (int i=0; i<num_not_supported_extensions; i++, index++) {
-        if (data[index] == 1) {
+    for (int i = 0; i < num_not_supported_extensions; i++, index++)
+    {
+        if (data[index] == 1)
+        {
             log_info("\t%s\n", extensions_not_supported[i]);
             total_supported++;
         }
     }
-    if (total_supported == 0)
-        log_info("\t(none)\n");
+    if (total_supported == 0) log_info("\t(none)\n");
 
     // Count the errors
     index = 0;
     int unknown = 0;
-    for ( i=0; i<num_of_supported_extensions; i++)
+    for (i = 0; i < num_of_supported_extensions; i++)
     {
         if (data[i] != 1)
         {
-            switch( extension_type[i] )
+            switch (extension_type[i])
             {
                 case kLanguage_extension:
-                    log_error("ERROR: Supported extension %s not defined in kernel.\n", extensions_supported[i]);
+                    log_error(
+                    "ERROR: Supported extension %s not defined in kernel.\n",
+                    extensions_supported[i]);
                     total_errors++;
                     break;
-                case kVendor_extension:
-                    unknown++;
-                    break;
-                case kAPI_extension:
-                    break;
+                case kVendor_extension: unknown++; break;
+                case kAPI_extension: break;
                 default:
-                    log_error( "ERROR: internal test error in extension detection.  This is probably a bug in the test.\n" );
+                    log_error(
+                    "ERROR: internal test error in extension detection.  This "
+                    "is probably a bug in the test.\n");
                     break;
             }
         }
     }
 
-    if(unknown)
+    if (unknown)
     {
-        log_info( "\nThe following non-KHR extensions are supported but do not add a preprocessor symbol to OpenCL C.\n" );
-        for (int z=0; z<num_of_supported_extensions; z++)
+        log_info("\nThe following non-KHR extensions are supported but do not "
+                 "add a preprocessor symbol to OpenCL C.\n");
+        for (int z = 0; z < num_of_supported_extensions; z++)
         {
-            if (data[z] != 1 && extension_type[z] == kVendor_extension )
-                log_info( "\t%s\n", extensions_supported[z]);
+            if (data[z] != 1 && extension_type[z] == kVendor_extension)
+                log_info("\t%s\n", extensions_supported[z]);
         }
     }
 
-    for ( ; i<num_not_supported_extensions; i++) {
-        if (data[i] != 0) {
-            log_error("ERROR: Unsupported extension %s is defined in kernel.\n", extensions_not_supported[i]);
+    for (; i < num_not_supported_extensions; i++)
+    {
+        if (data[i] != 0)
+        {
+            log_error("ERROR: Unsupported extension %s is defined in kernel.\n",
+                      extensions_not_supported[i]);
             total_errors++;
         }
     }
@@ -423,16 +493,17 @@ int test_compiler_defines_for_extensions(cl_device_id device, cl_context context
     // cleanup
     free(data);
     free(kernel_code);
-    for(i=0; i<num_of_supported_extensions; i++) {
-      free(extensions_supported[i]);
+    for (i = 0; i < num_of_supported_extensions; i++)
+    {
+        free(extensions_supported[i]);
     }
     free(extensions);
-    if( defines ) {
-        error = clReleaseMemObject( defines );
-        test_error( error, "Unable to release memory object" );
+    if (defines)
+    {
+        error = clReleaseMemObject(defines);
+        test_error(error, "Unable to release memory object");
     }
 
-    if (total_errors)
-        return -1;
+    if (total_errors) return -1;
     return 0;
 }

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -47,12 +47,11 @@
 
 static int no_unzip = 0;
 
-class custom_cout : public std::streambuf
-{
+class custom_cout : public std::streambuf {
 private:
     std::stringstream ss;
 
-    std::streamsize xsputn (const char* s, std::streamsize n)
+    std::streamsize xsputn(const char *s, std::streamsize n)
     {
         ss.write(s, n);
         return n;
@@ -60,7 +59,7 @@ private:
 
     int overflow(int c)
     {
-        if(c > 0 && c < 256) ss.put(c);
+        if (c > 0 && c < 256) ss.put(c);
         return c;
     }
 
@@ -72,12 +71,11 @@ private:
     }
 };
 
-class custom_cerr : public std::streambuf
-{
+class custom_cerr : public std::streambuf {
 private:
     std::stringstream ss;
 
-    std::streamsize xsputn (const char* s, std::streamsize n)
+    std::streamsize xsputn(const char *s, std::streamsize n)
     {
         ss.write(s, n);
         return n;
@@ -85,7 +83,7 @@ private:
 
     int overflow(int c)
     {
-        if(c > 0 && c < 256) ss.put(c);
+        if (c > 0 && c < 256) ss.put(c);
         return c;
     }
 
@@ -97,40 +95,36 @@ private:
     }
 };
 
-class override_buff
-{
-    std::ostream* stream;
-    std::streambuf* buff;
+class override_buff {
+    std::ostream *stream;
+    std::streambuf *buff;
 
 public:
-    override_buff(std::ostream& s, std::streambuf& b)
+    override_buff(std::ostream &s, std::streambuf &b)
     {
         stream = &s;
         buff = stream->rdbuf();
         stream->rdbuf(&b);
     }
 
-    ~override_buff()
-    {
-        stream->rdbuf(buff);
-    }
+    ~override_buff() { stream->rdbuf(buff); }
 };
 
-typedef bool (*testfn)(cl_device_id device, cl_uint size_t_width, const char *folder);
+typedef bool (*testfn)(cl_device_id device, cl_uint size_t_width,
+                       const char *folder);
 
-template <typename T>
-void dealloc(T *p)
+template <typename T> void dealloc(T *p)
 {
     if (p) delete p;
 }
 
-static bool is_dir_exits(const char* path)
+static bool is_dir_exits(const char *path)
 {
     assert(path && "NULL directory");
 #if defined(_WIN32)
     DWORD ftyp = GetFileAttributesA(path);
     if (ftyp != INVALID_FILE_ATTRIBUTES && (ftyp & FILE_ATTRIBUTE_DIRECTORY))
-    return true;
+        return true;
 #else // Linux assumed here.
     if (DIR *pDir = opendir(path))
     {
@@ -141,17 +135,17 @@ static bool is_dir_exits(const char* path)
     return false;
 }
 
-static void get_spir_version(cl_device_id device, std::vector<float>& versions)
+static void get_spir_version(cl_device_id device, std::vector<float> &versions)
 {
-    char version[64] = {0};
+    char version[64] = { 0 };
     cl_int err;
     size_t size = 0;
 
     if (err = clGetDeviceInfo(device, CL_DEVICE_SPIR_VERSIONS, sizeof(version),
-                              (void*)version, &size))
+                              (void *)version, &size))
     {
-        log_error( "Error: failed to obtain SPIR version at %s:%d (err = %d)\n",
-                  __FILE__, __LINE__, err );
+        log_error("Error: failed to obtain SPIR version at %s:%d (err = %d)\n",
+                  __FILE__, __LINE__, err);
         return;
     }
 
@@ -162,149 +156,160 @@ static void get_spir_version(cl_device_id device, std::vector<float>& versions)
     std::copy(std::istream_iterator<std::string>(versionStream),
               std::istream_iterator<std::string>(),
               std::back_inserter(versionVector));
-    for(std::list<std::string>::const_iterator it = versionVector.begin(),
-                                               e  = versionVector.end(); it != e;
-                                               it++)
+    for (std::list<std::string>::const_iterator it = versionVector.begin(),
+                                                e = versionVector.end();
+         it != e; it++)
     {
         versions.push_back(atof(it->c_str()));
     }
 }
 
-struct CounterEventHandler: EventHandler{
-    unsigned int& Counter;
+struct CounterEventHandler : EventHandler
+{
+    unsigned int &Counter;
     unsigned int TN;
     std::string LastTest;
 
-    //N - counter of successful tests.
-    //T - total number of tests in the suite
-    CounterEventHandler(unsigned int& N, unsigned int T): Counter(N), TN(T){}
+    // N - counter of successful tests.
+    // T - total number of tests in the suite
+    CounterEventHandler(unsigned int &N, unsigned int T): Counter(N), TN(T) {}
 
-    void operator ()(const std::string& testName, const std::string& kernelName) {
-        if (testName != LastTest){
+    void operator()(const std::string &testName, const std::string &kernelName)
+    {
+        if (testName != LastTest)
+        {
             ++Counter;
             LastTest = testName;
         }
     }
 };
 
-class AccumulatorEventHandler: public EventHandler{
-  std::list<std::string>& m_list;
-  const std::string m_name;
-public:
-  AccumulatorEventHandler(std::list<std::string>& L, const std::string N):
-  m_list(L), m_name(N){}
+class AccumulatorEventHandler : public EventHandler {
+    std::list<std::string> &m_list;
+    const std::string m_name;
 
-  void operator ()(const std::string& T, const std::string& K){
-    std::cerr << "\nTest " << T << "\t Kernel " << K << " failed" << std::endl;
-    m_list.push_back(m_name + "\t" + T + "\t" + K);
-  }
+public:
+    AccumulatorEventHandler(std::list<std::string> &L, const std::string N)
+        : m_list(L), m_name(N)
+    {}
+
+    void operator()(const std::string &T, const std::string &K)
+    {
+        std::cerr << "\nTest " << T << "\t Kernel " << K << " failed"
+                  << std::endl;
+        m_list.push_back(m_name + "\t" + T + "\t" + K);
+    }
 };
 
-static void printError(const std::string& S){
-  std::cerr << S << std::endl;
-}
+static void printError(const std::string &S) { std::cerr << S << std::endl; }
 
-static bool extractKernelAttribute(std::string& kernel_attributes,
-    const std::string& attribute, std::vector<std::string>& attribute_vector) {
-  size_t start = kernel_attributes.find(attribute + "(");
-  if (start == 0) {
-    size_t end = kernel_attributes.find(")", start);
-    if (end != std::string::npos) {
-      size_t length = end-start+1;
-      attribute_vector.push_back(kernel_attributes.substr(start, length));
-      kernel_attributes.erase(start, length);
-      return true;
+static bool extractKernelAttribute(std::string &kernel_attributes,
+                                   const std::string &attribute,
+                                   std::vector<std::string> &attribute_vector)
+{
+    size_t start = kernel_attributes.find(attribute + "(");
+    if (start == 0)
+    {
+        size_t end = kernel_attributes.find(")", start);
+        if (end != std::string::npos)
+        {
+            size_t length = end - start + 1;
+            attribute_vector.push_back(kernel_attributes.substr(start, length));
+            kernel_attributes.erase(start, length);
+            return true;
+        }
     }
-  }
-  return false;
+    return false;
 }
 
 // Extracts suite with the given name, and saves it to disk.
 static void extract_suite(const char *suiteName)
 {
-  mz_zip_archive zip_archive;
+    mz_zip_archive zip_archive;
 
-  // Composing the name of the archive.
-  char* dir = get_exe_dir();
-  std::string archiveName(dir);
-  archiveName.append(dir_sep());
-  archiveName.append(suiteName);
-  archiveName.append(".zip");
-  free(dir);
+    // Composing the name of the archive.
+    char *dir = get_exe_dir();
+    std::string archiveName(dir);
+    archiveName.append(dir_sep());
+    archiveName.append(suiteName);
+    archiveName.append(".zip");
+    free(dir);
 
 #if defined(_WIN32)
-      _mkdir(suiteName);
+    _mkdir(suiteName);
 #else
-      mkdir(suiteName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(suiteName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
 
-  memset(&zip_archive, 0, sizeof(zip_archive));
-  if (!mz_zip_reader_init_file(&zip_archive, archiveName.c_str(), 0))
-      throw Exceptions::ArchiveError(MZ_DATA_ERROR);
+    memset(&zip_archive, 0, sizeof(zip_archive));
+    if (!mz_zip_reader_init_file(&zip_archive, archiveName.c_str(), 0))
+        throw Exceptions::ArchiveError(MZ_DATA_ERROR);
 
-  // Get and print information about each file in the archive.
-  for (size_t i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
-  {
-      mz_zip_archive_file_stat fileStat;
-      size_t fileSize = 0;
+    // Get and print information about each file in the archive.
+    for (size_t i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
+    {
+        mz_zip_archive_file_stat fileStat;
+        size_t fileSize = 0;
 
-      if (!mz_zip_reader_file_stat(&zip_archive, i, &fileStat))
-      {
-          mz_zip_reader_end(&zip_archive);
-          throw Exceptions::ArchiveError(MZ_DATA_ERROR);
-      }
-      const std::string fileName = fileStat.m_filename;
+        if (!mz_zip_reader_file_stat(&zip_archive, i, &fileStat))
+        {
+            mz_zip_reader_end(&zip_archive);
+            throw Exceptions::ArchiveError(MZ_DATA_ERROR);
+        }
+        const std::string fileName = fileStat.m_filename;
 
-      // If the file is a directory, skip it. We create suite folder at the beggining.
-      if (mz_zip_reader_is_file_a_directory(&zip_archive, fileStat.m_file_index))
-      {
-          continue;
-      }
+        // If the file is a directory, skip it. We create suite folder at the
+        // beggining.
+        if (mz_zip_reader_is_file_a_directory(&zip_archive,
+                                              fileStat.m_file_index))
+        {
+            continue;
+        }
 
-      // Extracting the file.
-      void *p = mz_zip_reader_extract_file_to_heap(&zip_archive,
-                                                   fileName.c_str(),
-                                                   &fileSize, 0);
-      if (!p)
-      {
-          mz_zip_reader_end(&zip_archive);
-          throw std::runtime_error("mz_zip_reader_extract_file_to_heap() failed!\n");
-      }
+        // Extracting the file.
+        void *p = mz_zip_reader_extract_file_to_heap(
+        &zip_archive, fileName.c_str(), &fileSize, 0);
+        if (!p)
+        {
+            mz_zip_reader_end(&zip_archive);
+            throw std::runtime_error(
+            "mz_zip_reader_extract_file_to_heap() failed!\n");
+        }
 
-      // Writing the file back to the disk
-      std::fstream file(fileName.c_str(),
-                        std::ios_base::trunc | std::ios_base::in |
-                        std::ios_base::out | std::ios_base::binary);
-      if (!file.is_open())
-      {
-          std::string msg = "Failed to open ";
-          msg.append(fileName);
-          throw Exceptions::TestError(msg);
-      }
+        // Writing the file back to the disk
+        std::fstream file(fileName.c_str(),
+                          std::ios_base::trunc | std::ios_base::in
+                          | std::ios_base::out | std::ios_base::binary);
+        if (!file.is_open())
+        {
+            std::string msg = "Failed to open ";
+            msg.append(fileName);
+            throw Exceptions::TestError(msg);
+        }
 
-      file.write((const char*)p, fileSize);
-      if (file.bad())
-      {
-          std::string msg("Failed to write into ");
-          msg.append(fileName);
-          throw Exceptions::TestError(msg);
-      }
+        file.write((const char *)p, fileSize);
+        if (file.bad())
+        {
+            std::string msg("Failed to write into ");
+            msg.append(fileName);
+            throw Exceptions::TestError(msg);
+        }
 
-      // Cleanup.
-      file.flush();
-      file.close();
-      free(p);
-  }
-  mz_zip_reader_end(&zip_archive);
+        // Cleanup.
+        file.flush();
+        file.close();
+        free(p);
+    }
+    mz_zip_reader_end(&zip_archive);
 }
 
 //
 // Extracts the given suite package if needed.
 // return true if the suite was extracted, false otherwise.
 //
-static bool try_extract(const char* suite)
+static bool try_extract(const char *suite)
 {
-    if(no_unzip == 0)
+    if (no_unzip == 0)
     {
         std::cout << "Extracting test suite " << suite << std::endl;
         extract_suite(suite);
@@ -322,17 +327,22 @@ bool test_suite(cl_device_id device, cl_uint size_t_width, const char *folder,
 
     std::cout << "Running tests:" << std::endl;
 
-    OclExtensions deviceCapabilities = OclExtensions::getDeviceCapabilities(device);
+    OclExtensions deviceCapabilities =
+    OclExtensions::getDeviceCapabilities(device);
     unsigned int tests_passed = 0;
     CounterEventHandler SuccE(tests_passed, number_of_tests);
     std::list<std::string> ErrList;
     for (unsigned int i = 0; i < number_of_tests; ++i)
     {
         AccumulatorEventHandler FailE(ErrList, test_name[i]);
-        if((strlen(extension) != 0) && (!is_extension_available(device, extension)))
+        if ((strlen(extension) != 0)
+            && (!is_extension_available(device, extension)))
         {
             (SuccE)(test_name[i], "");
-            std::cout << test_name[i] << "... Skipped. (Cannot run on device due to missing extension: " << extension << " )." << std::endl;
+            std::cout
+            << test_name[i]
+            << "... Skipped. (Cannot run on device due to missing extension: "
+            << extension << " )." << std::endl;
             continue;
         }
         TestRunner testRunner(&SuccE, &FailE, deviceCapabilities);
@@ -340,7 +350,9 @@ bool test_suite(cl_device_id device, cl_uint size_t_width, const char *folder,
     }
 
     std::cout << std::endl;
-    std::cout << "PASSED " << tests_passed << " of " << number_of_tests << " tests.\n" << std::endl;
+    std::cout << "PASSED " << tests_passed << " of " << number_of_tests
+              << " tests.\n"
+              << std::endl;
 
     if (!ErrList.empty())
     {
@@ -353,23 +365,21 @@ bool test_suite(cl_device_id device, cl_uint size_t_width, const char *folder,
     return true;
 }
 
-static std::string getTestFolder(const std::string& TS)
+static std::string getTestFolder(const std::string &TS)
 {
-  const std::string DOUBLE("_double");
-  if (TS.size() < DOUBLE.size())
+    const std::string DOUBLE("_double");
+    if (TS.size() < DOUBLE.size()) return TS;
+
+    const size_t prefixLen = TS.size() - DOUBLE.size();
+    const std::string postfix = TS.substr(prefixLen, DOUBLE.size());
+    if (DOUBLE == postfix) return TS.substr(0, prefixLen);
+
     return TS;
-
-  const size_t prefixLen = TS.size() - DOUBLE.size();
-  const std::string postfix = TS.substr(prefixLen, DOUBLE.size());
-  if (DOUBLE == postfix)
-      return TS.substr(0, prefixLen);
-
-  return TS;
 }
 
-bool test_api (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_api(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "const_derived_d",
         "const_scalar_d",
         "const_vector16_d",
@@ -693,41 +703,32 @@ bool test_api (cl_device_id device, cl_uint size_t_width, const char *folder)
     };
 
     log_info("test_api\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_api_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_api_double(cl_device_id device, cl_uint size_t_width,
+                     const char *folder)
 {
-    static const char* test_name[] = {
-        "double_scalar_p",
-        "double_scalar_p2",
-        "double_scalar_d",
-        "double_vector2_p",
-        "double_vector2_p2",
-        "double_vector2_d",
-        "double_vector3_p",
-        "double_vector3_p2",
-        "double_vector3_d",
-        "double_vector4_p",
-        "double_vector4_p2",
-        "double_vector4_d",
-        "double_vector8_p",
-        "double_vector8_p2",
-        "double_vector8_d",
-        "double_vector16_p",
-        "double_vector16_p2",
-        "double_vector16_d",
+    static const char *test_name[] = {
+        "double_scalar_p",   "double_scalar_p2",   "double_scalar_d",
+        "double_vector2_p",  "double_vector2_p2",  "double_vector2_d",
+        "double_vector3_p",  "double_vector3_p2",  "double_vector3_d",
+        "double_vector4_p",  "double_vector4_p2",  "double_vector4_d",
+        "double_vector8_p",  "double_vector8_p2",  "double_vector8_d",
+        "double_vector16_p", "double_vector16_p2", "double_vector16_d",
     };
 
     log_info("test_api_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_atomics (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_atomics(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test_atomic_fn.atomic_add_global_int",
         "test_atomic_fn.atomic_add_global_uint",
         "test_atomic_fn.atomic_sub_global_int",
@@ -777,13 +778,14 @@ bool test_atomics (cl_device_id device, cl_uint size_t_width, const char *folder
     };
 
     log_info("test_atomics\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_basic (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_basic(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_kernel.work_item_functions",
         "test_sizeof.sizeof_char",
         "test_sizeof.sizeof_uchar",
@@ -1449,12 +1451,14 @@ bool test_basic (cl_device_id device, cl_uint size_t_width, const char *folder)
     };
 
     log_info("test_basic\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
-bool test_basic_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_basic_double(cl_device_id device, cl_uint size_t_width,
+                       const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.vec_type_hint_double",
         "sample_test.vec_type_hint_double2",
         "sample_test.vec_type_hint_double4",
@@ -1519,13 +1523,15 @@ bool test_basic_double (cl_device_id device, cl_uint size_t_width, const char *f
     };
 
     log_info("test_basic_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_commonfns (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_commonfns(cl_device_id device, cl_uint size_t_width,
+                    const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test_clamp.test_clamp_float",
         "test_clamp.test_clamp_float2",
         "test_clamp.test_clamp_float4",
@@ -1590,13 +1596,15 @@ bool test_commonfns (cl_device_id device, cl_uint size_t_width, const char *fold
     };
 
     log_info("test_commonfns\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_commonfns_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_commonfns_double(cl_device_id device, cl_uint size_t_width,
+                           const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test_clamp.test_clamp_double",
         "test_clamp.test_clamp_double2",
         "test_clamp.test_clamp_double4",
@@ -1642,12 +1650,14 @@ bool test_commonfns_double (cl_device_id device, cl_uint size_t_width, const cha
     };
 
     log_info("test_commonfns_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
-bool test_conversions (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_conversions(cl_device_id device, cl_uint size_t_width,
+                      const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "convert2_type_roundingmode_type_f",
         "convert3_type_roundingmode_type_f",
         "convert4_type_roundingmode_type_f",
@@ -2507,13 +2517,15 @@ bool test_conversions (cl_device_id device, cl_uint size_t_width, const char *fo
     };
 
     log_info("test_conversions\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_conversions_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_conversions_double(cl_device_id device, cl_uint size_t_width,
+                             const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "convert2_type_roundingmode_type_d",
         "convert3_type_roundingmode_type_d",
         "convert4_type_roundingmode_type_d",
@@ -2676,13 +2688,15 @@ bool test_conversions_double (cl_device_id device, cl_uint size_t_width, const c
     };
 
     log_info("test_conversions_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_geometrics (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_geometrics(cl_device_id device, cl_uint size_t_width,
+                     const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.geom_cross_float3",
         "sample_test.geom_cross_float4",
         "sample_test.geom_dot_float",
@@ -2716,13 +2730,15 @@ bool test_geometrics (cl_device_id device, cl_uint size_t_width, const char *fol
     };
 
     log_info("test_geometrics\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_geometrics_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_geometrics_double(cl_device_id device, cl_uint size_t_width,
+                            const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.geom_cross_double3",
         "sample_test.geom_cross_double4",
         "sample_test.geom_dot_double",
@@ -2744,13 +2760,14 @@ bool test_geometrics_double (cl_device_id device, cl_uint size_t_width, const ch
     };
 
     log_info("test_geometrics_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_half (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_half(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test.vload_half_global",
         "test.vload_half_private",
         "test.vload_half_local",
@@ -2967,13 +2984,15 @@ bool test_half (cl_device_id device, cl_uint size_t_width, const char *folder)
     };
 
     log_info("test_half\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_half_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_half_double(cl_device_id device, cl_uint size_t_width,
+                      const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test.vstore_half_global_double",
         "test.vstore_half_private_double",
         "test.vstore_half_local_double",
@@ -3142,13 +3161,15 @@ bool test_half_double (cl_device_id device, cl_uint size_t_width, const char *fo
     };
 
     log_info("test_half_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_kernel_image_methods (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_kernel_image_methods(cl_device_id device, cl_uint size_t_width,
+                               const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_kernel.get_image_info_1D",
         "sample_kernel.get_image_info_2D",
         "sample_kernel.get_image_info_3D",
@@ -3157,13 +3178,15 @@ bool test_kernel_image_methods (cl_device_id device, cl_uint size_t_width, const
     };
 
     log_info("test_kernel_image_methods\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_images_kernel_read_write (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_images_kernel_read_write(cl_device_id device, cl_uint size_t_width,
+                                   const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_kernel.read_image_set_1D_fint",
         "sample_kernel.read_image_set_1D_ffloat",
         "sample_kernel.read_image_set_1D_iint",
@@ -3209,13 +3232,15 @@ bool test_images_kernel_read_write (cl_device_id device, cl_uint size_t_width, c
     };
 
     log_info("test_images_kernel_read_write\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_images_samplerless_read (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_images_samplerless_read(cl_device_id device, cl_uint size_t_width,
+                                  const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_kernel.read_image_set_1D_float",
         "sample_kernel.read_image_set_1D_int",
         "sample_kernel.read_image_set_1D_uint",
@@ -3237,13 +3262,15 @@ bool test_images_samplerless_read (cl_device_id device, cl_uint size_t_width, co
     };
 
     log_info("test_images_samplerless_read\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_integer_ops (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_integer_ops(cl_device_id device, cl_uint size_t_width,
+                      const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.integer_clz_char",
         "sample_test.integer_clz_char2",
         "sample_test.integer_clz_char3",
@@ -4027,13 +4054,15 @@ bool test_integer_ops (cl_device_id device, cl_uint size_t_width, const char *fo
     };
 
     log_info("test_integer_ops\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_math_brute_force (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_math_brute_force(cl_device_id device, cl_uint size_t_width,
+                           const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "math_kernel.acos_float",
         "math_kernel3.acos_float3",
         "math_kernel16.acos_float16",
@@ -4608,13 +4637,15 @@ bool test_math_brute_force (cl_device_id device, cl_uint size_t_width, const cha
     };
 
     log_info("test_math_brute_force\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_math_brute_force_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_math_brute_force_double(cl_device_id device, cl_uint size_t_width,
+                                  const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "math_kernel8.acos_double8",
         "math_kernel4.acos_double4",
         "math_kernel16.acos_double16",
@@ -4663,7 +4694,7 @@ bool test_math_brute_force_double (cl_device_id device, cl_uint size_t_width, co
         "math_kernel3.atanh_double3",
         "math_kernel2.atanh_double2",
         "math_kernel.atanh_double",
-         "math_kernel8.atanpi_double8",
+        "math_kernel8.atanpi_double8",
         "math_kernel16.atanpi_double16",
         "math_kernel3.atanpi_double3",
         "math_kernel4.atanpi_double4",
@@ -5092,13 +5123,14 @@ bool test_math_brute_force_double (cl_device_id device, cl_uint size_t_width, co
     };
 
     log_info("test_math_brute_force_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_printf (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_printf(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test0.testCaseInt",
         "test1.testCaseFloat",
         "test5.testCaseChar",
@@ -5114,25 +5146,29 @@ bool test_printf (cl_device_id device, cl_uint size_t_width, const char *folder)
     };
 
     log_info("test_printf\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_profiling (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_profiling(cl_device_id device, cl_uint size_t_width,
+                    const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "testReadf",
         "image_filter",
     };
 
     log_info("test_profiling\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_relationals (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_relationals(cl_device_id device, cl_uint size_t_width,
+                      const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.relational_any_char",
         "sample_test.relational_any_char2",
         "sample_test.relational_any_char3",
@@ -5608,13 +5644,15 @@ bool test_relationals (cl_device_id device, cl_uint size_t_width, const char *fo
     };
 
     log_info("test_relationals\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_relationals_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_relationals_double(cl_device_id device, cl_uint size_t_width,
+                             const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "sample_test.relational_bitselect_double",
         "sample_test.relational_bitselect_double2",
         "sample_test.relational_bitselect_double3",
@@ -5698,152 +5736,97 @@ bool test_relationals_double (cl_device_id device, cl_uint size_t_width, const c
     };
 
     log_info("test_relationals_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_select (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_select(cl_device_id device, cl_uint size_t_width, const char *folder)
 {
-    static const char* test_name[] = {
-        "select_uchar_uchar",
-        "select_uchar2_uchar2",
-        "select_uchar3_uchar3",
-        "select_uchar4_uchar4",
-        "select_uchar8_uchar8",
-        "select_uchar16_uchar16",
-        "select_uchar_char",
-        "select_uchar2_char2",
-        "select_uchar3_char3",
-        "select_uchar4_char4",
-        "select_uchar8_char8",
-        "select_uchar16_char16",
-        "select_char_uchar",
-        "select_char2_uchar2",
-        "select_char3_uchar3",
-        "select_char4_uchar4",
-        "select_char8_uchar8",
-        "select_char16_uchar16",
-        "select_char_char",
-        "select_char2_char2",
-        "select_char3_char3",
-        "select_char4_char4",
-        "select_char8_char8",
-        "select_char16_char16",
-        "select_ushort_ushort",
-        "select_ushort2_ushort2",
-        "select_ushort3_ushort3",
-        "select_ushort4_ushort4",
-        "select_ushort8_ushort8",
-        "select_ushort16_ushort16",
-        "select_ushort_short",
-        "select_ushort2_short2",
-        "select_ushort3_short3",
-        "select_ushort4_short4",
-        "select_ushort8_short8",
-        "select_ushort16_short16",
-        "select_short_ushort",
-        "select_short2_ushort2",
-        "select_short3_ushort3",
-        "select_short4_ushort4",
-        "select_short8_ushort8",
-        "select_short16_ushort16",
-        "select_short_short",
-        "select_short2_short2",
-        "select_short3_short3",
-        "select_short4_short4",
-        "select_short8_short8",
-        "select_short16_short16",
-        "select_uint_uint",
-        "select_uint2_uint2",
-        "select_uint3_uint3",
-        "select_uint4_uint4",
-        "select_uint8_uint8",
-        "select_uint16_uint16",
-        "select_uint_int",
-        "select_uint2_int2",
-        "select_uint3_int3",
-        "select_uint4_int4",
-        "select_uint8_int8",
-        "select_uint16_int16",
-        "select_int_uint",
-        "select_int2_uint2",
-        "select_int3_uint3",
-        "select_int4_uint4",
-        "select_int8_uint8",
-        "select_int16_uint16",
-        "select_int_int",
-        "select_int2_int2",
-        "select_int3_int3",
-        "select_int4_int4",
-        "select_int8_int8",
-        "select_int16_int16",
-        "select_float_uint",
-        "select_float2_uint2",
-        "select_float3_uint3",
-        "select_float4_uint4",
-        "select_float8_uint8",
-        "select_float16_uint16",
-        "select_float_int",
-        "select_float2_int2",
-        "select_float3_int3",
-        "select_float4_int4",
-        "select_float8_int8",
-        "select_float16_int16",
-        "select_ulong_ulong",
-        "select_ulong2_ulong2",
-        "select_ulong3_ulong3",
-        "select_ulong4_ulong4",
-        "select_ulong8_ulong8",
-        "select_ulong16_ulong16",
-        "select_ulong_long",
-        "select_ulong2_long2",
-        "select_ulong3_long3",
-        "select_ulong4_long4",
-        "select_ulong8_long8",
-        "select_ulong16_long16",
-        "select_long_ulong",
-        "select_long2_ulong2",
-        "select_long3_ulong3",
-        "select_long4_ulong4",
-        "select_long8_ulong8",
-        "select_long16_ulong16",
-        "select_long_long",
-        "select_long2_long2",
-        "select_long3_long3",
-        "select_long4_long4",
-        "select_long8_long8",
-        "select_long16_long16",
+    static const char *test_name[] = {
+        "select_uchar_uchar",     "select_uchar2_uchar2",
+        "select_uchar3_uchar3",   "select_uchar4_uchar4",
+        "select_uchar8_uchar8",   "select_uchar16_uchar16",
+        "select_uchar_char",      "select_uchar2_char2",
+        "select_uchar3_char3",    "select_uchar4_char4",
+        "select_uchar8_char8",    "select_uchar16_char16",
+        "select_char_uchar",      "select_char2_uchar2",
+        "select_char3_uchar3",    "select_char4_uchar4",
+        "select_char8_uchar8",    "select_char16_uchar16",
+        "select_char_char",       "select_char2_char2",
+        "select_char3_char3",     "select_char4_char4",
+        "select_char8_char8",     "select_char16_char16",
+        "select_ushort_ushort",   "select_ushort2_ushort2",
+        "select_ushort3_ushort3", "select_ushort4_ushort4",
+        "select_ushort8_ushort8", "select_ushort16_ushort16",
+        "select_ushort_short",    "select_ushort2_short2",
+        "select_ushort3_short3",  "select_ushort4_short4",
+        "select_ushort8_short8",  "select_ushort16_short16",
+        "select_short_ushort",    "select_short2_ushort2",
+        "select_short3_ushort3",  "select_short4_ushort4",
+        "select_short8_ushort8",  "select_short16_ushort16",
+        "select_short_short",     "select_short2_short2",
+        "select_short3_short3",   "select_short4_short4",
+        "select_short8_short8",   "select_short16_short16",
+        "select_uint_uint",       "select_uint2_uint2",
+        "select_uint3_uint3",     "select_uint4_uint4",
+        "select_uint8_uint8",     "select_uint16_uint16",
+        "select_uint_int",        "select_uint2_int2",
+        "select_uint3_int3",      "select_uint4_int4",
+        "select_uint8_int8",      "select_uint16_int16",
+        "select_int_uint",        "select_int2_uint2",
+        "select_int3_uint3",      "select_int4_uint4",
+        "select_int8_uint8",      "select_int16_uint16",
+        "select_int_int",         "select_int2_int2",
+        "select_int3_int3",       "select_int4_int4",
+        "select_int8_int8",       "select_int16_int16",
+        "select_float_uint",      "select_float2_uint2",
+        "select_float3_uint3",    "select_float4_uint4",
+        "select_float8_uint8",    "select_float16_uint16",
+        "select_float_int",       "select_float2_int2",
+        "select_float3_int3",     "select_float4_int4",
+        "select_float8_int8",     "select_float16_int16",
+        "select_ulong_ulong",     "select_ulong2_ulong2",
+        "select_ulong3_ulong3",   "select_ulong4_ulong4",
+        "select_ulong8_ulong8",   "select_ulong16_ulong16",
+        "select_ulong_long",      "select_ulong2_long2",
+        "select_ulong3_long3",    "select_ulong4_long4",
+        "select_ulong8_long8",    "select_ulong16_long16",
+        "select_long_ulong",      "select_long2_ulong2",
+        "select_long3_ulong3",    "select_long4_ulong4",
+        "select_long8_ulong8",    "select_long16_ulong16",
+        "select_long_long",       "select_long2_long2",
+        "select_long3_long3",     "select_long4_long4",
+        "select_long8_long8",     "select_long16_long16",
     };
 
     log_info("test_select\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_select_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_select_double(cl_device_id device, cl_uint size_t_width,
+                        const char *folder)
 {
-    static const char* test_name[] = {
-        "select_double_ulong",
-        "select_double2_ulong2",
-        "select_double3_ulong3",
-        "select_double4_ulong4",
-        "select_double8_ulong8",
-        "select_double16_ulong16",
-        "select_double_long",
-        "select_double2_long2",
-        "select_double3_long3",
-        "select_double4_long4",
-        "select_double8_long8",
-        "select_double16_long16",
+    static const char *test_name[] = {
+        "select_double_ulong",   "select_double2_ulong2",
+        "select_double3_ulong3", "select_double4_ulong4",
+        "select_double8_ulong8", "select_double16_ulong16",
+        "select_double_long",    "select_double2_long2",
+        "select_double3_long3",  "select_double4_long4",
+        "select_double8_long8",  "select_double16_long16",
     };
 
     log_info("test_select_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
-bool test_vec_align (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_vec_align(cl_device_id device, cl_uint size_t_width,
+                    const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_char2",
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_char3",
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_char4",
@@ -5902,13 +5885,15 @@ bool test_vec_align (cl_device_id device, cl_uint size_t_width, const char *fold
     };
 
     log_info("vec_align\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
 
-bool test_vec_align_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_vec_align_double(cl_device_id device, cl_uint size_t_width,
+                           const char *folder)
 {
-    static const char* test_name[] = {
+    static const char *test_name[] = {
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_double2",
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_double3",
         "test_vec_align_packed_struct_arr.vec_align_packed_struct_arr_double4",
@@ -5918,130 +5903,104 @@ bool test_vec_align_double (cl_device_id device, cl_uint size_t_width, const cha
     };
 
     log_info("vec_align_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
 
-bool test_vec_step (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_vec_step(cl_device_id device, cl_uint size_t_width,
+                   const char *folder)
 {
-    static const char* test_name[] = {
-        "test_step_var.step_var_char",
-        "test_step_var.step_var_char2",
-        "test_step_var.step_var_char3",
-        "test_step_var.step_var_char4",
-        "test_step_var.step_var_char8",
-        "test_step_var.step_var_char16",
-        "test_step_var.step_var_uchar",
-        "test_step_var.step_var_uchar2",
-        "test_step_var.step_var_uchar3",
-        "test_step_var.step_var_uchar4",
-        "test_step_var.step_var_uchar8",
-        "test_step_var.step_var_uchar16",
-        "test_step_var.step_var_short",
-        "test_step_var.step_var_short2",
-        "test_step_var.step_var_short3",
-        "test_step_var.step_var_short4",
-        "test_step_var.step_var_short8",
-        "test_step_var.step_var_short16",
-        "test_step_var.step_var_ushort",
-        "test_step_var.step_var_ushort2",
-        "test_step_var.step_var_ushort3",
-        "test_step_var.step_var_ushort4",
-        "test_step_var.step_var_ushort8",
-        "test_step_var.step_var_ushort16",
-        "test_step_var.step_var_int",
-        "test_step_var.step_var_int2",
-        "test_step_var.step_var_int3",
-        "test_step_var.step_var_int4",
-        "test_step_var.step_var_int8",
-        "test_step_var.step_var_int16",
-        "test_step_var.step_var_uint",
-        "test_step_var.step_var_uint2",
-        "test_step_var.step_var_uint3",
-        "test_step_var.step_var_uint4",
-        "test_step_var.step_var_uint8",
-        "test_step_var.step_var_uint16",
-        "test_step_var.step_var_long",
-        "test_step_var.step_var_long2",
-        "test_step_var.step_var_long3",
-        "test_step_var.step_var_long4",
-        "test_step_var.step_var_long8",
-        "test_step_var.step_var_long16",
-        "test_step_var.step_var_ulong",
-        "test_step_var.step_var_ulong2",
-        "test_step_var.step_var_ulong3",
-        "test_step_var.step_var_ulong4",
-        "test_step_var.step_var_ulong8",
-        "test_step_var.step_var_ulong16",
-        "test_step_var.step_var_float",
-        "test_step_var.step_var_float2",
-        "test_step_var.step_var_float3",
-        "test_step_var.step_var_float4",
-        "test_step_var.step_var_float8",
-        "test_step_var.step_var_float16",
+    static const char *test_name[] = {
+        "test_step_var.step_var_char",    "test_step_var.step_var_char2",
+        "test_step_var.step_var_char3",   "test_step_var.step_var_char4",
+        "test_step_var.step_var_char8",   "test_step_var.step_var_char16",
+        "test_step_var.step_var_uchar",   "test_step_var.step_var_uchar2",
+        "test_step_var.step_var_uchar3",  "test_step_var.step_var_uchar4",
+        "test_step_var.step_var_uchar8",  "test_step_var.step_var_uchar16",
+        "test_step_var.step_var_short",   "test_step_var.step_var_short2",
+        "test_step_var.step_var_short3",  "test_step_var.step_var_short4",
+        "test_step_var.step_var_short8",  "test_step_var.step_var_short16",
+        "test_step_var.step_var_ushort",  "test_step_var.step_var_ushort2",
+        "test_step_var.step_var_ushort3", "test_step_var.step_var_ushort4",
+        "test_step_var.step_var_ushort8", "test_step_var.step_var_ushort16",
+        "test_step_var.step_var_int",     "test_step_var.step_var_int2",
+        "test_step_var.step_var_int3",    "test_step_var.step_var_int4",
+        "test_step_var.step_var_int8",    "test_step_var.step_var_int16",
+        "test_step_var.step_var_uint",    "test_step_var.step_var_uint2",
+        "test_step_var.step_var_uint3",   "test_step_var.step_var_uint4",
+        "test_step_var.step_var_uint8",   "test_step_var.step_var_uint16",
+        "test_step_var.step_var_long",    "test_step_var.step_var_long2",
+        "test_step_var.step_var_long3",   "test_step_var.step_var_long4",
+        "test_step_var.step_var_long8",   "test_step_var.step_var_long16",
+        "test_step_var.step_var_ulong",   "test_step_var.step_var_ulong2",
+        "test_step_var.step_var_ulong3",  "test_step_var.step_var_ulong4",
+        "test_step_var.step_var_ulong8",  "test_step_var.step_var_ulong16",
+        "test_step_var.step_var_float",   "test_step_var.step_var_float2",
+        "test_step_var.step_var_float3",  "test_step_var.step_var_float4",
+        "test_step_var.step_var_float8",  "test_step_var.step_var_float16",
     };
 
     log_info("vec_step\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
-bool test_vec_step_double (cl_device_id device, cl_uint size_t_width, const char *folder)
+bool test_vec_step_double(cl_device_id device, cl_uint size_t_width,
+                          const char *folder)
 {
-    static const char* test_name[] = {
-        "test_step_var.step_var_double",
-        "test_step_var.step_var_double2",
-        "test_step_var.step_var_double3",
-        "test_step_var.step_var_double4",
-        "test_step_var.step_var_double8",
-        "test_step_var.step_var_double16",
+    static const char *test_name[] = {
+        "test_step_var.step_var_double",  "test_step_var.step_var_double2",
+        "test_step_var.step_var_double3", "test_step_var.step_var_double4",
+        "test_step_var.step_var_double8", "test_step_var.step_var_double16",
     };
 
     log_info("vec_step_double\n");
-    return test_suite(device, size_t_width, folder, test_name, sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
+    return test_suite(device, size_t_width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "cl_khr_fp64");
 }
 
-template<typename T>
-void getT(const TestResult& res, unsigned arg, T& out)
+template <typename T> void getT(const TestResult &res, unsigned arg, T &out)
 {
-    out = *(T*)(res.kernelArgs().getArg(arg)->getBuffer());
+    out = *(T *)(res.kernelArgs().getArg(arg)->getBuffer());
 }
 
 class LinkageTestService {
-    std::vector<const char*> m_moduleNames;
-    const char* m_kernelName;
+    std::vector<const char *> m_moduleNames;
+    const char *m_kernelName;
     int m_expectedResult;
     const char *m_name;
 
 public:
     LinkageTestService(const char **moduleNames, int numModules,
-                       const char *kernelName) :
-    m_moduleNames(numModules),
-    m_kernelName(kernelName),
-    m_expectedResult(-1),
-    m_name(NULL) {
-        std::copy(moduleNames, moduleNames+numModules, m_moduleNames.begin());
+                       const char *kernelName)
+        : m_moduleNames(numModules), m_kernelName(kernelName),
+          m_expectedResult(-1), m_name(NULL)
+    {
+        std::copy(moduleNames, moduleNames + numModules, m_moduleNames.begin());
     }
 
-    void setExpectedResult(int expectedRes) {
-        m_expectedResult = expectedRes;
-    }
+    void setExpectedResult(int expectedRes) { m_expectedResult = expectedRes; }
 
-    bool compareResult(cl_device_id dev, cl_uint width) {
+    bool compareResult(cl_device_id dev, cl_uint width)
+    {
         clContextWrapper context;
         clCommandQueueWrapper queue;
         size_t num_modules = m_moduleNames.size();
         std::vector<cl_program> programs(num_modules);
         create_context_and_queue(dev, &context, &queue);
 
-        for (size_t i=0; i<num_modules; i++)
+        for (size_t i = 0; i < num_modules; i++)
         {
             std::string filepath;
-            get_bc_file_path("compile_and_link", m_moduleNames[i], filepath, width);
+            get_bc_file_path("compile_and_link", m_moduleNames[i], filepath,
+                             width);
             programs[i] = create_program_from_bc(context, filepath);
         }
         // Linking to the modules together.
         LinkTask linkTask(&programs[0], num_modules, context, dev);
-        if (!linkTask.execute()) {
+        if (!linkTask.execute())
+        {
             std::cerr << "Failed due to the following link error: "
                       << linkTask.getErrorLog() << std::endl;
             return false;
@@ -6062,18 +6021,13 @@ public:
         return (m_expectedResult == actual_value);
     }
 
-    void setName(const char* name)
-    {
-        m_name = name;
-    }
+    void setName(const char *name) { m_name = name; }
 
-    const char* getName()const
-    {
-        return m_name;
-    }
+    const char *getName() const { return m_name; }
 };
 
-bool test_compile_and_link (cl_device_id device, cl_uint width, const char *folder)
+bool test_compile_and_link(cl_device_id device, cl_uint width,
+                           const char *folder)
 {
     try_extract(folder);
     std::cout << "Running tests:" << std::endl;
@@ -6081,16 +6035,22 @@ bool test_compile_and_link (cl_device_id device, cl_uint width, const char *fold
     // Each array represents a testcast in compile and link. The first element
     // is the name of the 'main' module, as the second is the module being
     // linked.
-    const char* private_files[]  = {"private_link", "private"};
-    const char* internal_files[] = {"internal_linkage", "internal_linkage.mod"};
-    const char* external_files[] = {"external_linkage", "external_linkage.mod"};
-    const char* available_externally_files[] = {"available_externally", "global"};
+    const char *private_files[] = { "private_link", "private" };
+    const char *internal_files[] = { "internal_linkage",
+                                     "internal_linkage.mod" };
+    const char *external_files[] = { "external_linkage",
+                                     "external_linkage.mod" };
+    const char *available_externally_files[] = { "available_externally",
+                                                 "global" };
 
-    std::vector<LinkageTestService*> linkageTests;
+    std::vector<LinkageTestService *> linkageTests;
     linkageTests.push_back(new LinkageTestService(private_files, 2, "k"));
-    linkageTests.push_back(new LinkageTestService(internal_files, 2, "internal_linkage"));
-    linkageTests.push_back(new LinkageTestService(external_files, 2, "external_linkage"));
-    linkageTests.push_back(new LinkageTestService(available_externally_files, 2, "k"));
+    linkageTests.push_back(
+    new LinkageTestService(internal_files, 2, "internal_linkage"));
+    linkageTests.push_back(
+    new LinkageTestService(external_files, 2, "external_linkage"));
+    linkageTests.push_back(
+    new LinkageTestService(available_externally_files, 2, "k"));
     // Set tests Names.
     linkageTests[0]->setName("private_linkage");
     linkageTests[1]->setName("internal_linkage");
@@ -6106,11 +6066,11 @@ bool test_compile_and_link (cl_device_id device, cl_uint width, const char *fold
     CounterEventHandler SuccE(tests_passed, linkageTests.size());
     std::list<std::string> ErrList;
 
-    for (size_t i=0; i<linkageTests.size(); i++)
+    for (size_t i = 0; i < linkageTests.size(); i++)
     {
         AccumulatorEventHandler FailE(ErrList, linkageTests[i]->getName());
         std::cout << linkageTests[i]->getName() << "..." << std::endl;
-        if(linkageTests[i]->compareResult(device, width))
+        if (linkageTests[i]->compareResult(device, width))
         {
             (SuccE)(linkageTests[i]->getName(), "");
             std::cout << linkageTests[i]->getName() << " passed." << std::endl;
@@ -6124,54 +6084,52 @@ bool test_compile_and_link (cl_device_id device, cl_uint width, const char *fold
     }
 
     std::cout << std::endl;
-    std::cout << "PASSED " << tests_passed << " of " << SuccE.TN << " tests.\n" << std::endl;
+    std::cout << "PASSED " << tests_passed << " of " << SuccE.TN << " tests.\n"
+              << std::endl;
     // Deallocating.
-    std::for_each(linkageTests.begin(), linkageTests.end(), dealloc<LinkageTestService>);
+    std::for_each(linkageTests.begin(), linkageTests.end(),
+                  dealloc<LinkageTestService>);
     return tests_passed == SuccE.TN;
 }
 
-static bool test_sampler_enumeration(cl_device_id device, cl_uint width, const char *folder)
+static bool test_sampler_enumeration(cl_device_id device, cl_uint width,
+                                     const char *folder)
 {
-  static const char* test_name[] = {
-      "sampler_NormF_AddrC_FilterL",
-      "sampler_NormF_AddrC_FilterN",
-      "sampler_NormF_AddrE_FilterL",
-      "sampler_NormF_AddrE_FilterN",
-      // "sampler_NormF_AddrM_FilterL" - Invalid combination
-      // "sampler_NormF_AddrM_FilterN" - Invalid combination
-      "sampler_NormF_AddrN_FilterL",
-      "sampler_NormF_AddrN_FilterN",
-      // "sampler_NormF_AddrR_FilterL" - Invalid combination
-      // "sampler_NormF_AddrR_FilterN" - Invalid combination
-      "sampler_NormT_AddrC_FilterL",
-      "sampler_NormT_AddrC_FilterN",
-      "sampler_NormT_AddrE_FilterL",
-      "sampler_NormT_AddrE_FilterN",
-      "sampler_NormT_AddrM_FilterL",
-      "sampler_NormT_AddrM_FilterN",
-      "sampler_NormT_AddrN_FilterL",
-      "sampler_NormT_AddrN_FilterN",
-      "sampler_NormT_AddrR_FilterL",
-      "sampler_NormT_AddrR_FilterN"
-  };
+    static const char *test_name[] = {
+        "sampler_NormF_AddrC_FilterL", "sampler_NormF_AddrC_FilterN",
+        "sampler_NormF_AddrE_FilterL", "sampler_NormF_AddrE_FilterN",
+        // "sampler_NormF_AddrM_FilterL" - Invalid combination
+        // "sampler_NormF_AddrM_FilterN" - Invalid combination
+        "sampler_NormF_AddrN_FilterL", "sampler_NormF_AddrN_FilterN",
+        // "sampler_NormF_AddrR_FilterL" - Invalid combination
+        // "sampler_NormF_AddrR_FilterN" - Invalid combination
+        "sampler_NormT_AddrC_FilterL", "sampler_NormT_AddrC_FilterN",
+        "sampler_NormT_AddrE_FilterL", "sampler_NormT_AddrE_FilterN",
+        "sampler_NormT_AddrM_FilterL", "sampler_NormT_AddrM_FilterN",
+        "sampler_NormT_AddrN_FilterL", "sampler_NormT_AddrN_FilterN",
+        "sampler_NormT_AddrR_FilterL", "sampler_NormT_AddrR_FilterN"
+    };
 
-  log_info("test_sampler_enum_values\n");
-  return test_suite(device, width, folder, test_name, sizeof(test_name) / sizeof(const char *), "");
+    log_info("test_sampler_enum_values\n");
+    return test_suite(device, width, folder, test_name,
+                      sizeof(test_name) / sizeof(const char *), "");
 }
 
-const char* HOSTVAL_SAMPLER    = "hostval_sampler";
-const char* HOSTVAL_IMAGE_DESC = "hostval_image_desc";
-const char* HOSTVAL_IMAGE_DESC_3D = "hostval_image_desc_3d";
+const char *HOSTVAL_SAMPLER = "hostval_sampler";
+const char *HOSTVAL_IMAGE_DESC = "hostval_image_desc";
+const char *HOSTVAL_IMAGE_DESC_3D = "hostval_image_desc_3d";
 
 static bool test_image_enumeration(cl_context context, cl_command_queue queue,
                                    cl_program prog, cl_device_id device,
-                                   CounterEventHandler &SuccE, std::list<std::string> &ErrList)
+                                   CounterEventHandler &SuccE,
+                                   std::list<std::string> &ErrList)
 {
     // Creating image descriptor value generator.
     ImageValuesGenerator imgVals;
     bool success = true;
 
-    for(ImageValuesGenerator::iterator it = imgVals.begin(), e = imgVals.end(); it != e; ++it)
+    for (ImageValuesGenerator::iterator it = imgVals.begin(), e = imgVals.end();
+         it != e; ++it)
     {
         bool currentSuccess = true;
         AccumulatorEventHandler FailE(ErrList, it.toString());
@@ -6191,7 +6149,7 @@ static bool test_image_enumeration(cl_context context, cl_command_queue queue,
         KernelArgInfo baseInfo;
         baseInfo.setTypeName(baseGenName.c_str());
         DataGenerator *pDataGen = DataGenerator::getInstance();
-        KernelArgGenerator* pOrig = pDataGen->getArgGenerator(baseInfo);
+        KernelArgGenerator *pOrig = pDataGen->getArgGenerator(baseInfo);
 
         try
         {
@@ -6199,23 +6157,26 @@ static bool test_image_enumeration(cl_context context, cl_command_queue queue,
             WorkSizeInfo ws;
             clKernelWrapper kernel = create_kernel_helper(prog, kernelName);
 
-            // Acquiring a reference to the image generator we need for this image
-            // type.
+            // Acquiring a reference to the image generator we need for this
+            // image type.
             KernelArgInfo typedInfo;
             const std::string tyName = it.getImageGeneratorName();
             typedInfo.setTypeName(tyName.c_str());
-            KernelArgGeneratorImage* pImgGen = (KernelArgGeneratorImage*)pDataGen->getArgGenerator(typedInfo);
+            KernelArgGeneratorImage *pImgGen =
+            (KernelArgGeneratorImage *)pDataGen->getArgGenerator(typedInfo);
 
             // If the channel order is not valid for the current image type, we
             // continue to the next one.
-            if (!pImgGen->isValidChannelOrder(context, it.getOpenCLChannelOrder()))
+            if (!pImgGen->isValidChannelOrder(context,
+                                              it.getOpenCLChannelOrder()))
                 continue;
 
-            // Due to unknown number of types at the beggining count them on the fly
+            // Due to unknown number of types at the beggining count them on the
+            // fly
             SuccE.TN++;
 
-            // Configuring the image generator so it will produce the correct image
-            // descriptor.
+            // Configuring the image generator so it will produce the correct
+            // image descriptor.
             pImgGen->setChannelOrder(it.getOpenCLChannelOrder());
             pDataGen->setArgGenerator(baseInfo, pImgGen);
 
@@ -6230,8 +6191,9 @@ static bool test_image_enumeration(cl_context context, cl_command_queue queue,
             getT<int>(res, 1U, actualOrder), getT<int>(res, 2U, actualTy);
             if (actualOrder != it.getSPIRChannelOrder())
             {
-                std::cout << " expected channel order: " << it.getSPIRChannelOrder()
-                          << " but received " << actualOrder << "." << std::endl;
+                std::cout << " expected channel order: "
+                          << it.getSPIRChannelOrder() << " but received "
+                          << actualOrder << "." << std::endl;
                 success = currentSuccess = false;
             }
 
@@ -6245,14 +6207,15 @@ static bool test_image_enumeration(cl_context context, cl_command_queue queue,
             if (currentSuccess)
             {
                 (SuccE)(it.toString(), kernelName);
-                std::cout << "enum_" << it.toString() << " passed." << std::endl;
+                std::cout << "enum_" << it.toString() << " passed."
+                          << std::endl;
             }
             else
             {
                 (FailE)(it.toString(), kernelName);
                 std::cout << "enum_" << it.toString() << " FAILED" << std::endl;
             }
-        } catch(std::exception e)
+        } catch (std::exception e)
         {
             (FailE)(it.toString(), kernelName);
             print_error(1, e.what());
@@ -6266,15 +6229,18 @@ static bool test_image_enumeration(cl_context context, cl_command_queue queue,
     return success;
 }
 
-static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue,
-                                   cl_program prog, cl_device_id device,
-                                   CounterEventHandler &SuccE, std::list<std::string> &ErrList)
+static bool test_image_enumeration_3d(cl_context context,
+                                      cl_command_queue queue, cl_program prog,
+                                      cl_device_id device,
+                                      CounterEventHandler &SuccE,
+                                      std::list<std::string> &ErrList)
 {
     // Creating image descriptor value generator.
     ImageValuesGenerator imgVals;
     bool success = true;
 
-    for(ImageValuesGenerator::iterator it = imgVals.begin(), e = imgVals.end(); it != e; ++it)
+    for (ImageValuesGenerator::iterator it = imgVals.begin(), e = imgVals.end();
+         it != e; ++it)
     {
         bool currentSuccess = true;
         AccumulatorEventHandler FailE(ErrList, it.toString());
@@ -6294,7 +6260,7 @@ static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue
         KernelArgInfo baseInfo;
         baseInfo.setTypeName(baseGenName.c_str());
         DataGenerator *pDataGen = DataGenerator::getInstance();
-        KernelArgGenerator* pOrig = pDataGen->getArgGenerator(baseInfo);
+        KernelArgGenerator *pOrig = pDataGen->getArgGenerator(baseInfo);
 
         try
         {
@@ -6302,23 +6268,26 @@ static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue
             WorkSizeInfo ws;
             clKernelWrapper kernel = create_kernel_helper(prog, kernelName);
 
-            // Acquiring a reference to the image generator we need for this image
-            // type.
+            // Acquiring a reference to the image generator we need for this
+            // image type.
             KernelArgInfo typedInfo;
             const std::string tyName = it.getImageGeneratorName();
             typedInfo.setTypeName(tyName.c_str());
-            KernelArgGeneratorImage* pImgGen = (KernelArgGeneratorImage*)pDataGen->getArgGenerator(typedInfo);
+            KernelArgGeneratorImage *pImgGen =
+            (KernelArgGeneratorImage *)pDataGen->getArgGenerator(typedInfo);
 
             // If the channel order is not valid for the current image type, we
             // continue to the next one.
-            if (!pImgGen->isValidChannelOrder(context, it.getOpenCLChannelOrder()))
+            if (!pImgGen->isValidChannelOrder(context,
+                                              it.getOpenCLChannelOrder()))
                 continue;
 
-            // Due to unknown number of types at the beggining count them on the fly
+            // Due to unknown number of types at the beggining count them on the
+            // fly
             SuccE.TN++;
 
-            // Configuring the image generator so it will produce the correct image
-            // descriptor.
+            // Configuring the image generator so it will produce the correct
+            // image descriptor.
             pImgGen->setChannelOrder(it.getOpenCLChannelOrder());
             pDataGen->setArgGenerator(baseInfo, pImgGen);
 
@@ -6333,8 +6302,9 @@ static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue
             getT<int>(res, 1U, actualOrder), getT<int>(res, 2U, actualTy);
             if (actualOrder != it.getSPIRChannelOrder())
             {
-                std::cout << " expected channel order: " << it.getSPIRChannelOrder()
-                          << " but received " << actualOrder << "." << std::endl;
+                std::cout << " expected channel order: "
+                          << it.getSPIRChannelOrder() << " but received "
+                          << actualOrder << "." << std::endl;
                 success = currentSuccess = false;
             }
 
@@ -6348,14 +6318,15 @@ static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue
             if (currentSuccess)
             {
                 (SuccE)(it.toString(), kernelName);
-                std::cout << "enum_" << it.toString() << " passed." << std::endl;
+                std::cout << "enum_" << it.toString() << " passed."
+                          << std::endl;
             }
             else
             {
                 (FailE)(it.toString(), kernelName);
                 std::cout << "enum_" << it.toString() << " FAILED" << std::endl;
             }
-        } catch(std::exception e)
+        } catch (std::exception e)
         {
             (FailE)(it.toString(), kernelName);
             print_error(1, e.what());
@@ -6369,44 +6340,54 @@ static bool test_image_enumeration_3d(cl_context context, cl_command_queue queue
     return success;
 }
 
-static bool test_enum_values(cl_device_id device, cl_uint width, const char *folder)
+static bool test_enum_values(cl_device_id device, cl_uint width,
+                             const char *folder)
 {
     try_extract(folder);
     std::cout << "Running tests:" << std::endl;
     bool success = true;
-    typedef bool (*EnumTest)(cl_context, cl_command_queue, cl_program, cl_device_id, CounterEventHandler &SuccE, std::list<std::string> &ErrList);
-    EnumTest test_functions[] = { test_image_enumeration, test_image_enumeration_3d };
+    typedef bool (*EnumTest)(cl_context, cl_command_queue, cl_program,
+                             cl_device_id, CounterEventHandler & SuccE,
+                             std::list<std::string> & ErrList);
+    EnumTest test_functions[] = { test_image_enumeration,
+                                  test_image_enumeration_3d };
     const char *enum_tests[] = { HOSTVAL_IMAGE_DESC, HOSTVAL_IMAGE_DESC_3D };
-    const size_t TEST_NUM = sizeof(enum_tests)/sizeof(char*);
+    const size_t TEST_NUM = sizeof(enum_tests) / sizeof(char *);
 
     unsigned int tests_passed = 0;
     CounterEventHandler SuccE(tests_passed, 0);
     std::list<std::string> ErrList;
 
     // Composing the name of the CSV file.
-    char* dir = get_exe_dir();
+    char *dir = get_exe_dir();
     std::string csvName(dir);
     csvName.append(dir_sep());
     csvName.append("khr.csv");
     free(dir);
 
     // Figure out whether the test can run on the device. If not, we skip it.
-    const KhrSupport& khrDb = *KhrSupport::get(csvName);
+    const KhrSupport &khrDb = *KhrSupport::get(csvName);
 
-    for (size_t i=0; i<TEST_NUM; i++)
+    for (size_t i = 0; i < TEST_NUM; i++)
     {
         const char *cur_test = enum_tests[i];
         cl_bool images = khrDb.isImagesRequired(folder, cur_test);
         cl_bool images3D = khrDb.isImages3DRequired(folder, cur_test);
-        if(images == CL_TRUE && checkForImageSupport(device) != 0)
+        if (images == CL_TRUE && checkForImageSupport(device) != 0)
         {
-            std::cout << cur_test << " Skipped. (Cannot run on device due to Images is not supported)." << std::endl;
+            std::cout << cur_test
+                      << " Skipped. (Cannot run on device due to Images is not "
+                         "supported)."
+                      << std::endl;
             continue;
         }
 
-        if(images3D == CL_TRUE && checkFor3DImageSupport(device) != 0)
+        if (images3D == CL_TRUE && checkFor3DImageSupport(device) != 0)
         {
-            std::cout << cur_test << " Skipped. (Cannot run on device as 3D images are not supported)." << std::endl;
+            std::cout << cur_test
+                      << " Skipped. (Cannot run on device as 3D images are not "
+                         "supported)."
+                      << std::endl;
             continue;
         }
 
@@ -6418,21 +6399,23 @@ static bool test_enum_values(cl_device_id device, cl_uint width, const char *fol
         clProgramWrapper bcprog = create_program_from_bc(context, bc_file_path);
 
         // Build the kernel.
-        SpirBuildTask build_task(bcprog, device, "-x spir -spir-std=1.2 -cl-kernel-arg-info");
+        SpirBuildTask build_task(bcprog, device,
+                                 "-x spir -spir-std=1.2 -cl-kernel-arg-info");
         if (!build_task.execute())
         {
             std::cerr << "Cannot run enum_values suite due to the "
-                      << "following build error: "
-                      << build_task.getErrorLog()
+                      << "following build error: " << build_task.getErrorLog()
                       << std::endl;
             return false;
         }
 
-        success &= test_functions[i](context, queue, bcprog, device, SuccE, ErrList);
+        success &=
+        test_functions[i](context, queue, bcprog, device, SuccE, ErrList);
     }
 
     std::cout << std::endl;
-    std::cout << "PASSED " << tests_passed << " of " << SuccE.TN << " tests.\n" << std::endl;
+    std::cout << "PASSED " << tests_passed << " of " << SuccE.TN << " tests.\n"
+              << std::endl;
 
     if (!ErrList.empty())
     {
@@ -6443,19 +6426,21 @@ static bool test_enum_values(cl_device_id device, cl_uint width, const char *fol
     return success;
 }
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems)
+std::vector<std::string> &split(const std::string &s, char delim,
+                                std::vector<std::string> &elems)
 {
     std::stringstream ss(s);
     std::string item;
-    while (std::getline(ss, item, delim)) {
+    while (std::getline(ss, item, delim))
+    {
         elems.push_back(item);
     }
     return elems;
 }
 
 
-static bool
-test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
+static bool test_kernel_attributes(cl_device_id device, cl_uint width,
+                                   const char *folder)
 {
     try_extract(folder);
     std::cout << "Running tests:" << std::endl;
@@ -6464,7 +6449,7 @@ test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
     std::string bc_file_path;
     clCommandQueueWrapper queue;
     clKernelWrapper kernel;
-    char attributes[256] = {0};
+    char attributes[256] = { 0 };
     size_t i, res_size = 0;
 
     unsigned int tests_passed = 0;
@@ -6482,21 +6467,26 @@ test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
         clProgramWrapper bcprog = create_program_from_bc(context, bc_file_path);
 
         // Building the program, so we could create the kernel.
-        SpirBuildTask build_task(bcprog, device, "-x spir -spir-std=1.2 -cl-kernel-arg-info");
+        SpirBuildTask build_task(bcprog, device,
+                                 "-x spir -spir-std=1.2 -cl-kernel-arg-info");
         if (!build_task.execute())
         {
-            std::cerr << "Cannot run kernel_attributes suite due to the following build error: "
-                      << build_task.getErrorLog()
-                      << std::endl;
+            std::cerr << "Cannot run kernel_attributes suite due to the "
+                         "following build error: "
+                      << build_task.getErrorLog() << std::endl;
             throw std::exception();
         }
 
         // Querying the kernel for its attributes.
         kernel = create_kernel_helper(bcprog, "test");
-        cl_int err_code = clGetKernelInfo(kernel, CL_KERNEL_ATTRIBUTES, sizeof(attributes), attributes, &res_size);
+        cl_int err_code =
+        clGetKernelInfo(kernel, CL_KERNEL_ATTRIBUTES, sizeof(attributes),
+                        attributes, &res_size);
         if (err_code != CL_SUCCESS)
         {
-            std::cerr << "clGetKernelInfo unable retrieve kernel attributes (error code: " << err_code << " )\n";
+            std::cerr
+            << "clGetKernelInfo unable retrieve kernel attributes (error code: "
+            << err_code << " )\n";
             throw std::exception();
         }
 
@@ -6508,19 +6498,22 @@ test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
         std::vector<std::string> actual;
         split(attributes, ' ', actual);
 
-        for(i = 0; i < expected.size(); ++i)
+        for (i = 0; i < expected.size(); ++i)
         {
-            if(std::find(actual.begin(), actual.end(), expected[i]) == actual.end())
+            if (std::find(actual.begin(), actual.end(), expected[i])
+                == actual.end())
             {
                 // Attribute not found
-                std::cout << "Extracted from kernel: " << attributes << std::endl;
-                std::cerr << "expected " << expected[i] << " attribute not found" << std::endl;
+                std::cout << "Extracted from kernel: " << attributes
+                          << std::endl;
+                std::cerr << "expected " << expected[i]
+                          << " attribute not found" << std::endl;
                 throw std::exception();
             }
         }
         (SuccE)(test_name, "");
         log_info("kernel_attributes passed.\n");
-    } catch(std::exception e)
+    } catch (std::exception e)
     {
         (FailE)(test_name, "");
         log_info("kernel_attributes FAILED\n");
@@ -6528,7 +6521,8 @@ test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
     }
 
     std::cout << std::endl;
-    std::cout << "PASSED " << tests_passed << " of " << 1 << " tests.\n" << std::endl;
+    std::cout << "PASSED " << tests_passed << " of " << 1 << " tests.\n"
+              << std::endl;
 
     if (!ErrList.empty())
     {
@@ -6539,7 +6533,8 @@ test_kernel_attributes(cl_device_id device, cl_uint width, const char *folder)
     return success;
 }
 
-static bool test_binary_type(cl_device_id device, cl_uint width, const char *folder)
+static bool test_binary_type(cl_device_id device, cl_uint width,
+                             const char *folder)
 {
     std::string bc_file_path;
     clContextWrapper context;
@@ -6564,29 +6559,30 @@ static bool test_binary_type(cl_device_id device, cl_uint width, const char *fol
         create_context_and_queue(device, &context, &queue);
         clProgramWrapper clprog = create_program_from_bc(context, bc_file_path);
 
-        // Checking the attribute matches the requierment in Section 9.15.2 of the
-        // extensions SPEC.
+        // Checking the attribute matches the requierment in Section 9.15.2 of
+        // the extensions SPEC.
         cl_int binary_type = 0;
         size_t ret_size = 0;
-        if (cl_int err_code = clGetProgramBuildInfo(clprog, device, CL_PROGRAM_BINARY_TYPE, sizeof(cl_int), &binary_type, &ret_size))
+        if (cl_int err_code =
+            clGetProgramBuildInfo(clprog, device, CL_PROGRAM_BINARY_TYPE,
+                                  sizeof(cl_int), &binary_type, &ret_size))
         {
             std::cerr << "Cannot run test_binary_type suite due to the "
-                      << "following build error: "
-                      << err_code << std::endl;
+                      << "following build error: " << err_code << std::endl;
             throw std::exception();
         }
 
         assert(ret_size == sizeof(cl_int) && "Return size doesn't match.");
         if (binary_type != CL_PROGRAM_BINARY_TYPE_INTERMEDIATE)
         {
-            std::cerr << "binary type is " << binary_type
-                      << " as opposed to " << CL_PROGRAM_BINARY_TYPE_INTERMEDIATE
+            std::cerr << "binary type is " << binary_type << " as opposed to "
+                      << CL_PROGRAM_BINARY_TYPE_INTERMEDIATE
                       << " which is the expected value." << std::endl;
             throw std::exception();
         }
         (SuccE)(test_name, "");
         log_info("binary_type passed.\n");
-    } catch(std::exception e)
+    } catch (std::exception e)
     {
         (FailE)(test_name, "");
         log_info("binary_type FAILED\n");
@@ -6595,7 +6591,8 @@ static bool test_binary_type(cl_device_id device, cl_uint width, const char *fol
 
 
     std::cout << std::endl;
-    std::cout << "PASSED " << tests_passed << " of " << 1 << " tests.\n" << std::endl;
+    std::cout << "PASSED " << tests_passed << " of " << 1 << " tests.\n"
+              << std::endl;
 
     if (!ErrList.empty())
     {
@@ -6614,48 +6611,53 @@ struct sub_suite
 };
 
 static const sub_suite spir_suites[] = {
-    {"api",                         "api",                       test_api},
-    {"api_double",                  "api",                       test_api_double},
-    {"atomics",                     "atomics",                   test_atomics},
-    {"basic",                       "basic",                     test_basic},
-    {"basic_double",                "basic",                     test_basic_double},
-    {"commonfns",                   "commonfns",                 test_commonfns},
-    {"commonfns_double",            "commonfns",                 test_commonfns_double},
-    {"conversions",                 "conversions",               test_conversions},
-    {"conversions_double",          "conversions",               test_conversions_double},
-    {"geometrics",                  "geometrics",                test_geometrics},
-    {"geometrics_double",           "geometrics",                test_geometrics_double},
-    {"half",                        "half",                      test_half},
-    {"half_double",                 "half",                      test_half_double},
-    {"kernel_image_methods",        "kernel_image_methods",      test_kernel_image_methods},
-    {"images_kernel_read_write",    "images_kernel_read_write",  test_images_kernel_read_write},
-    {"images_samplerlessRead",      "images_samplerlessRead",    test_images_samplerless_read},
-    {"integer_ops",                 "integer_ops",               test_integer_ops},
-    {"math_brute_force",            "math_brute_force",          test_math_brute_force},
-    {"math_brute_force_double",     "math_brute_force",          test_math_brute_force_double},
-    {"printf",                      "printf",                    test_printf},
-    {"profiling",                   "profiling",                 test_profiling},
-    {"relationals",                 "relationals",               test_relationals},
-    {"relationals_double",          "relationals",               test_relationals_double},
-    {"select",                      "select",                    test_select},
-    {"select_double",               "select",                    test_select_double},
-    {"vec_align",                   "vec_align",                 test_vec_align},
-    {"vec_align_double",            "vec_align",                 test_vec_align_double},
-    {"vec_step",                    "vec_step",                  test_vec_step},
-    {"vec_step_double",             "vec_step",                  test_vec_step_double},
-    {"compile_and_link",            "compile_and_link",          test_compile_and_link},
-    {"sampler_enumeration",         "sampler_enumeration",       test_sampler_enumeration},
-    {"enum_values",                 "enum_values",               test_enum_values},
-    {"kernel_attributes",           "kernel_attributes",         test_kernel_attributes},
-    {"binary_type",                  "binary_type",              test_binary_type},
+    { "api", "api", test_api },
+    { "api_double", "api", test_api_double },
+    { "atomics", "atomics", test_atomics },
+    { "basic", "basic", test_basic },
+    { "basic_double", "basic", test_basic_double },
+    { "commonfns", "commonfns", test_commonfns },
+    { "commonfns_double", "commonfns", test_commonfns_double },
+    { "conversions", "conversions", test_conversions },
+    { "conversions_double", "conversions", test_conversions_double },
+    { "geometrics", "geometrics", test_geometrics },
+    { "geometrics_double", "geometrics", test_geometrics_double },
+    { "half", "half", test_half },
+    { "half_double", "half", test_half_double },
+    { "kernel_image_methods", "kernel_image_methods",
+      test_kernel_image_methods },
+    { "images_kernel_read_write", "images_kernel_read_write",
+      test_images_kernel_read_write },
+    { "images_samplerlessRead", "images_samplerlessRead",
+      test_images_samplerless_read },
+    { "integer_ops", "integer_ops", test_integer_ops },
+    { "math_brute_force", "math_brute_force", test_math_brute_force },
+    { "math_brute_force_double", "math_brute_force",
+      test_math_brute_force_double },
+    { "printf", "printf", test_printf },
+    { "profiling", "profiling", test_profiling },
+    { "relationals", "relationals", test_relationals },
+    { "relationals_double", "relationals", test_relationals_double },
+    { "select", "select", test_select },
+    { "select_double", "select", test_select_double },
+    { "vec_align", "vec_align", test_vec_align },
+    { "vec_align_double", "vec_align", test_vec_align_double },
+    { "vec_step", "vec_step", test_vec_step },
+    { "vec_step_double", "vec_step", test_vec_step_double },
+    { "compile_and_link", "compile_and_link", test_compile_and_link },
+    { "sampler_enumeration", "sampler_enumeration", test_sampler_enumeration },
+    { "enum_values", "enum_values", test_enum_values },
+    { "kernel_attributes", "kernel_attributes", test_kernel_attributes },
+    { "binary_type", "binary_type", test_binary_type },
 };
 
 
 /**
 Utility function using to find a specific sub-suite name in the SPIR tests.
-Called in case the user asked for running a specific sub-suite or specific tests.
+Called in case the user asked for running a specific sub-suite or specific
+tests.
  */
-static int find_suite_name (std::string suite_name)
+static int find_suite_name(std::string suite_name)
 {
     for (unsigned int i = 0; i < sizeof(spir_suites) / sizeof(sub_suite); ++i)
     {
@@ -6671,7 +6673,9 @@ static int find_suite_name (std::string suite_name)
 /**
 Look for the first device from the first platform .
  */
-cl_device_id get_platform_device (cl_device_type device_type, cl_uint choosen_device_index, cl_uint choosen_platform_index)
+cl_device_id get_platform_device(cl_device_type device_type,
+                                 cl_uint choosen_device_index,
+                                 cl_uint choosen_platform_index)
 {
     int error = CL_SUCCESS;
     cl_uint num_platforms = 0;
@@ -6681,51 +6685,58 @@ cl_device_id get_platform_device (cl_device_type device_type, cl_uint choosen_de
 
     /* Get the platform */
     error = clGetPlatformIDs(0, NULL, &num_platforms);
-    if ( error != CL_SUCCESS )
+    if (error != CL_SUCCESS)
     {
-        throw std::runtime_error("clGetPlatformIDs failed: " + std::string(IGetErrorString(error)));
+        throw std::runtime_error("clGetPlatformIDs failed: "
+                                 + std::string(IGetErrorString(error)));
     }
-    if ( choosen_platform_index >= num_platforms )
+    if (choosen_platform_index >= num_platforms)
     {
         throw std::runtime_error("platform index out of range");
     }
 
-    platforms = (cl_platform_id *) malloc( num_platforms * sizeof( cl_platform_id ) );
-    if ( !platforms )
+    platforms =
+    (cl_platform_id *)malloc(num_platforms * sizeof(cl_platform_id));
+    if (!platforms)
     {
         throw std::runtime_error("platform malloc failed");
     }
     BufferOwningPtr<cl_platform_id> platformsBuf(platforms);
 
     error = clGetPlatformIDs(num_platforms, platforms, NULL);
-    if ( error != CL_SUCCESS )
+    if (error != CL_SUCCESS)
     {
-        throw std::runtime_error("clGetPlatformIDs failed: " + std::string(IGetErrorString(error)));
+        throw std::runtime_error("clGetPlatformIDs failed: "
+                                 + std::string(IGetErrorString(error)));
     }
 
     /* Get the number of requested devices */
-    error = clGetDeviceIDs(platforms[choosen_platform_index],  device_type, 0, NULL, &num_devices );
-    if ( error != CL_SUCCESS )
+    error = clGetDeviceIDs(platforms[choosen_platform_index], device_type, 0,
+                           NULL, &num_devices);
+    if (error != CL_SUCCESS)
     {
-        throw std::runtime_error("clGetDeviceIDs failed: " + std::string(IGetErrorString(error)));
+        throw std::runtime_error("clGetDeviceIDs failed: "
+                                 + std::string(IGetErrorString(error)));
     }
-    if ( choosen_device_index >= num_devices )
+    if (choosen_device_index >= num_devices)
     {
         throw std::runtime_error("device index out of rangen");
     }
 
-    devices = (cl_device_id *) malloc( num_devices * sizeof( cl_device_id ) );
-    if ( !devices )
+    devices = (cl_device_id *)malloc(num_devices * sizeof(cl_device_id));
+    if (!devices)
     {
         throw std::runtime_error("device malloc failed");
     }
     BufferOwningPtr<cl_device_id> devicesBuf(devices);
 
     /* Get the requested device */
-    error = clGetDeviceIDs(platforms[choosen_platform_index],  device_type, num_devices, devices, NULL );
-    if ( error != CL_SUCCESS )
+    error = clGetDeviceIDs(platforms[choosen_platform_index], device_type,
+                           num_devices, devices, NULL);
+    if (error != CL_SUCCESS)
     {
-        throw std::runtime_error("clGetDeviceIDs failed: " + std::string(IGetErrorString(error)));
+        throw std::runtime_error("clGetDeviceIDs failed: "
+                                 + std::string(IGetErrorString(error)));
     }
 
     return devices[choosen_device_index];
@@ -6740,144 +6751,166 @@ cl_device_id get_platform_device (cl_device_type device_type, cl_uint choosen_de
     b) one argument (tests-suite name) - run one SPIR tests-suite
     c) two arguments (tests-suite name and test name) - run one SPIR test
  */
-static int ParseCommandLine (int argc, const char *argv[],
-    std::string& suite_name, std::string& test_name, cl_device_type *device_type, cl_uint *device_index, cl_uint *platform_index, cl_uint *size_t_width)
+static int ParseCommandLine(int argc, const char *argv[],
+                            std::string &suite_name, std::string &test_name,
+                            cl_device_type *device_type, cl_uint *device_index,
+                            cl_uint *platform_index, cl_uint *size_t_width)
 {
     int based_on_env_var = 0;
 
     /* Check for environment variable to set device type */
-    char *env_mode = getenv( "CL_DEVICE_TYPE" );
-    if( env_mode != NULL )
+    char *env_mode = getenv("CL_DEVICE_TYPE");
+    if (env_mode != NULL)
     {
         based_on_env_var = 1;
-        if( strcmp( env_mode, "gpu" ) == 0 || strcmp( env_mode, "CL_DEVICE_TYPE_GPU" ) == 0 )
+        if (strcmp(env_mode, "gpu") == 0
+            || strcmp(env_mode, "CL_DEVICE_TYPE_GPU") == 0)
             *device_type = CL_DEVICE_TYPE_GPU;
-        else if( strcmp( env_mode, "cpu" ) == 0 || strcmp( env_mode, "CL_DEVICE_TYPE_CPU" ) == 0 )
+        else if (strcmp(env_mode, "cpu") == 0
+                 || strcmp(env_mode, "CL_DEVICE_TYPE_CPU") == 0)
             *device_type = CL_DEVICE_TYPE_CPU;
-        else if( strcmp( env_mode, "accelerator" ) == 0 || strcmp( env_mode, "CL_DEVICE_TYPE_ACCELERATOR" ) == 0 )
+        else if (strcmp(env_mode, "accelerator") == 0
+                 || strcmp(env_mode, "CL_DEVICE_TYPE_ACCELERATOR") == 0)
             *device_type = CL_DEVICE_TYPE_ACCELERATOR;
-        else if( strcmp( env_mode, "default" ) == 0 || strcmp( env_mode, "CL_DEVICE_TYPE_DEFAULT" ) == 0 )
+        else if (strcmp(env_mode, "default") == 0
+                 || strcmp(env_mode, "CL_DEVICE_TYPE_DEFAULT") == 0)
             *device_type = CL_DEVICE_TYPE_DEFAULT;
         else
         {
-            throw Exceptions::CmdLineError( "Unknown CL_DEVICE_TYPE env variable setting\n");
+            throw Exceptions::CmdLineError(
+            "Unknown CL_DEVICE_TYPE env variable setting\n");
         }
     }
 
-    env_mode = getenv( "CL_DEVICE_INDEX" );
-    if( env_mode != NULL )
+    env_mode = getenv("CL_DEVICE_INDEX");
+    if (env_mode != NULL)
     {
         *device_index = atoi(env_mode);
     }
 
-    env_mode = getenv( "CL_PLATFORM_INDEX" );
-    if( env_mode != NULL )
+    env_mode = getenv("CL_PLATFORM_INDEX");
+    if (env_mode != NULL)
     {
         *platform_index = atoi(env_mode);
     }
 
-        /* Process the command line arguments */
+    /* Process the command line arguments */
 
     /* Special case: just list the tests */
-    if( ( argc > 1 ) && (!strcmp( argv[ 1 ], "-list" ) || !strcmp( argv[ 1 ], "-h" ) || !strcmp( argv[ 1 ], "--help" )))
+    if ((argc > 1)
+        && (!strcmp(argv[1], "-list") || !strcmp(argv[1], "-h")
+            || !strcmp(argv[1], "--help")))
     {
-        log_info( "Usage: %s [<suite name>] [pid<num>] [id<num>] [<device type>] [w32] [no-unzip]\n", argv[0] );
-        log_info( "\t<suite name>\tOne or more of: (default all)\n");
-        log_info( "\tpid<num>\t\tIndicates platform at index <num> should be used (default 0).\n" );
-        log_info( "\tid<num>\t\tIndicates device at index <num> should be used (default 0).\n" );
-        log_info( "\t<device_type>\tcpu|gpu|accelerator|<CL_DEVICE_TYPE_*> (default CL_DEVICE_TYPE_DEFAULT)\n" );
-        log_info( "\tw32\t\tIndicates device address bits is 32.\n" );
-        log_info( "\tno-unzip\t\tDo not extract test files from Zip; use existing.\n" );
+        log_info("Usage: %s [<suite name>] [pid<num>] [id<num>] [<device "
+                 "type>] [w32] [no-unzip]\n",
+                 argv[0]);
+        log_info("\t<suite name>\tOne or more of: (default all)\n");
+        log_info("\tpid<num>\t\tIndicates platform at index <num> should be "
+                 "used (default 0).\n");
+        log_info("\tid<num>\t\tIndicates device at index <num> should be used "
+                 "(default 0).\n");
+        log_info("\t<device_type>\tcpu|gpu|accelerator|<CL_DEVICE_TYPE_*> "
+                 "(default CL_DEVICE_TYPE_DEFAULT)\n");
+        log_info("\tw32\t\tIndicates device address bits is 32.\n");
+        log_info(
+        "\tno-unzip\t\tDo not extract test files from Zip; use existing.\n");
 
-        for( unsigned int i = 0; i < (sizeof(spir_suites) / sizeof(sub_suite)); i++ )
+        for (unsigned int i = 0; i < (sizeof(spir_suites) / sizeof(sub_suite));
+             i++)
         {
-            log_info( "\t\t%s\n", spir_suites[i].name );
+            log_info("\t\t%s\n", spir_suites[i].name);
         }
         return 0;
     }
 
     /* Do we have a CPU/GPU specification? */
-    while( argc > 1 )
+    while (argc > 1)
     {
-        if( strcmp( argv[ argc - 1 ], "gpu" ) == 0 || strcmp( argv[ argc - 1 ], "CL_DEVICE_TYPE_GPU" ) == 0 )
+        if (strcmp(argv[argc - 1], "gpu") == 0
+            || strcmp(argv[argc - 1], "CL_DEVICE_TYPE_GPU") == 0)
         {
             *device_type = CL_DEVICE_TYPE_GPU;
             argc--;
         }
-        else if( strcmp( argv[ argc - 1 ], "cpu" ) == 0 || strcmp( argv[ argc - 1 ], "CL_DEVICE_TYPE_CPU" ) == 0 )
+        else if (strcmp(argv[argc - 1], "cpu") == 0
+                 || strcmp(argv[argc - 1], "CL_DEVICE_TYPE_CPU") == 0)
         {
             *device_type = CL_DEVICE_TYPE_CPU;
             argc--;
         }
-        else if( strcmp( argv[ argc - 1 ], "accelerator" ) == 0 || strcmp( argv[ argc - 1 ], "CL_DEVICE_TYPE_ACCELERATOR" ) == 0 )
+        else if (strcmp(argv[argc - 1], "accelerator") == 0
+                 || strcmp(argv[argc - 1], "CL_DEVICE_TYPE_ACCELERATOR") == 0)
         {
             *device_type = CL_DEVICE_TYPE_ACCELERATOR;
             argc--;
         }
-        else if( strcmp( argv[ argc - 1 ], "CL_DEVICE_TYPE_DEFAULT" ) == 0 )
+        else if (strcmp(argv[argc - 1], "CL_DEVICE_TYPE_DEFAULT") == 0)
         {
             *device_type = CL_DEVICE_TYPE_DEFAULT;
             argc--;
         }
-        else if( strcmp( argv[ argc - 1 ], "w32" ) == 0 )
+        else if (strcmp(argv[argc - 1], "w32") == 0)
         {
             *size_t_width = 32;
             argc--;
         }
-        else if( strcmp( argv[ argc - 1 ], "no-unzip" ) == 0 )
+        else if (strcmp(argv[argc - 1], "no-unzip") == 0)
         {
             no_unzip = 1;
             argc--;
         }
-        else break;
+        else
+            break;
     }
 
     /* Did we choose a specific device index? */
-    if( argc > 1 )
+    if (argc > 1)
     {
-        if( strlen( argv[ argc - 1 ] ) >= 3 && argv[ argc - 1 ][0] == 'i' && argv[ argc - 1 ][1] == 'd' )
+        if (strlen(argv[argc - 1]) >= 3 && argv[argc - 1][0] == 'i'
+            && argv[argc - 1][1] == 'd')
         {
-            *device_index = atoi( &(argv[ argc - 1 ][2]) );
+            *device_index = atoi(&(argv[argc - 1][2]));
             argc--;
         }
     }
 
     /* Did we choose a specific platform index? */
-    if( argc > 1 )
+    if (argc > 1)
     {
-        if( strlen( argv[ argc - 1 ] ) >= 3 && argv[ argc - 1 ][0] == 'p' && argv[ argc - 1 ][1] == 'i' && argv[ argc - 1 ][2] == 'd')
+        if (strlen(argv[argc - 1]) >= 3 && argv[argc - 1][0] == 'p'
+            && argv[argc - 1][1] == 'i' && argv[argc - 1][2] == 'd')
         {
-            *platform_index = atoi( &(argv[ argc - 1 ][3]) );
+            *platform_index = atoi(&(argv[argc - 1][3]));
             argc--;
         }
     }
 
-    switch( *device_type )
+    switch (*device_type)
     {
-        case CL_DEVICE_TYPE_GPU:
-            log_info( "Requesting GPU device " );
-            break;
-        case CL_DEVICE_TYPE_CPU:
-            log_info( "Requesting CPU device " );
-            break;
+        case CL_DEVICE_TYPE_GPU: log_info("Requesting GPU device "); break;
+        case CL_DEVICE_TYPE_CPU: log_info("Requesting CPU device "); break;
         case CL_DEVICE_TYPE_ACCELERATOR:
-            log_info( "Requesting Accelerator device " );
+            log_info("Requesting Accelerator device ");
             break;
         case CL_DEVICE_TYPE_DEFAULT:
-            log_info( "Requesting Default device " );
+            log_info("Requesting Default device ");
             break;
         default:
-            throw Exceptions::CmdLineError( "Requesting unknown device ");
+            throw Exceptions::CmdLineError("Requesting unknown device ");
             break;
     }
-    log_info( based_on_env_var ? "based on environment variable " : "based on command line " );
-    log_info( "for platform index %d and device index %d\n", *platform_index, *device_index);
+    log_info(based_on_env_var ? "based on environment variable "
+                              : "based on command line ");
+    log_info("for platform index %d and device index %d\n", *platform_index,
+             *device_index);
 
     if (argc > 3)
     {
-        throw Exceptions::CmdLineError("Command line error. Unrecognized token\n");
+        throw Exceptions::CmdLineError(
+        "Command line error. Unrecognized token\n");
     }
-    else {
+    else
+    {
         if (argc > 1)
         {
             suite_name.assign(argv[1]);
@@ -6891,27 +6924,29 @@ static int ParseCommandLine (int argc, const char *argv[],
     return 1;
 }
 
-struct WLMsg: EventHandler
+struct WLMsg : EventHandler
 {
-    const char* Msg;
+    const char *Msg;
 
-    WLMsg(const char* M): Msg(M){}
+    WLMsg(const char *M): Msg(M) {}
 
-    void operator()(const std::string& T, const std::string& K)
+    void operator()(const std::string &T, const std::string &K)
     {
-        std::cout << "Test " << T << " Kernel " << K << "\t" << Msg << std::endl;
+        std::cout << "Test " << T << " Kernel " << K << "\t" << Msg
+                  << std::endl;
     }
 };
 
 
-int main (int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
-    std::string test_suite_name;                       // name of the selected tests-suite (NULL for all)
-    std::string test_file_name;                        // name of the .selected test (NULL for all)
+    std::string
+    test_suite_name; // name of the selected tests-suite (NULL for all)
+    std::string test_file_name; // name of the .selected test (NULL for all)
     cl_device_type device_type = CL_DEVICE_TYPE_DEFAULT;
     cl_uint choosen_device_index = 0;
     cl_uint choosen_platform_index = 0;
-    cl_uint size_t_width = 0;                            // device address bits (32 or 64).
+    cl_uint size_t_width = 0; // device address bits (32 or 64).
     cl_int err;
     int failed = 0;
     int ntests = 0;
@@ -6923,49 +6958,62 @@ int main (int argc, const char* argv[])
     WLMsg Success("\t\tPassed"), Failure("\t\tFailure");
     try
     {
-        if (ParseCommandLine(argc, argv, test_suite_name, test_file_name, &device_type, &choosen_device_index, &choosen_platform_index, &size_t_width) == 0)
+        if (ParseCommandLine(argc, argv, test_suite_name, test_file_name,
+                             &device_type, &choosen_device_index,
+                             &choosen_platform_index, &size_t_width)
+            == 0)
             return 0;
 
-        cl_device_id device = get_platform_device(device_type, choosen_device_index, choosen_platform_index);
+        cl_device_id device = get_platform_device(
+        device_type, choosen_device_index, choosen_platform_index);
         printDeviceHeader(device);
 
         std::vector<float> versions;
         get_spir_version(device, versions);
-        if (!is_extension_available( device, "cl_khr_spir") ||
-            std::find(versions.begin(), versions.end(), 1.2f) == versions.end())
+        if (!is_extension_available(device, "cl_khr_spir")
+            || std::find(versions.begin(), versions.end(), 1.2f)
+            == versions.end())
         {
-            log_info("Spir extension version 1.2 is not supported by the device\n");
+            log_info(
+            "Spir extension version 1.2 is not supported by the device\n");
             return 0;
         }
 
-        // size_t_width <> 0 - device address bits is forced by command line argument
-        if ((0 == size_t_width) && ((err = clGetDeviceInfo(device, CL_DEVICE_ADDRESS_BITS, sizeof(cl_uint), &size_t_width, NULL))))
+        // size_t_width <> 0 - device address bits is forced by command line
+        // argument
+        if ((0 == size_t_width)
+            && ((err = clGetDeviceInfo(device, CL_DEVICE_ADDRESS_BITS,
+                                       sizeof(cl_uint), &size_t_width, NULL))))
         {
-            print_error( err, "Unable to obtain device address bits" );
+            print_error(err, "Unable to obtain device address bits");
             return -1;
         }
 
-        if (! test_suite_name.empty())
+        if (!test_suite_name.empty())
         {
             // command line is not empty - do not run all the tests
             int tsn = find_suite_name(test_suite_name);
             ntests = 1;
             if (tsn < 0)
             {
-                throw Exceptions::CmdLineError("Command line error. Error in SPIR sub-suite name\n");
+                throw Exceptions::CmdLineError(
+                "Command line error. Error in SPIR sub-suite name\n");
             }
             else if (test_file_name.empty())
             {
-                if (!spir_suites[tsn].test_function(device, size_t_width, spir_suites[tsn].folder))
+                if (!spir_suites[tsn].test_function(device, size_t_width,
+                                                    spir_suites[tsn].folder))
                     failed++;
             }
             else
             {
-                OclExtensions devExt = OclExtensions::getDeviceCapabilities(device);
+                OclExtensions devExt =
+                OclExtensions::getDeviceCapabilities(device);
                 TestRunner runner(&Success, &Failure, devExt);
                 std::string folder = getTestFolder(test_suite_name.c_str());
                 try_extract(folder.c_str());
-                if (!runner.runBuildTest(device, folder.c_str(), test_file_name.c_str(), size_t_width))
+                if (!runner.runBuildTest(device, folder.c_str(),
+                                         test_file_name.c_str(), size_t_width))
                     failed++;
             }
         }
@@ -6975,30 +7023,31 @@ int main (int argc, const char* argv[])
             ntests = (sizeof(spir_suites) / sizeof(spir_suites[0]));
             for (unsigned int i = 0; i < ntests; ++i)
             {
-                if (!spir_suites[i].test_function(device, size_t_width, spir_suites[i].folder))
+                if (!spir_suites[i].test_function(device, size_t_width,
+                                                  spir_suites[i].folder))
                     failed++;
             }
         }
         if (failed)
-            std::cout << "FAILED " << failed << " of " << ntests << " test suites.\n" << std::endl;
+            std::cout << "FAILED " << failed << " of " << ntests
+                      << " test suites.\n"
+                      << std::endl;
         else
-            std::cout << "PASSED " << ntests << " of " << ntests << " test suites.\n" << std::endl;
+            std::cout << "PASSED " << ntests << " of " << ntests
+                      << " test suites.\n"
+                      << std::endl;
         return failed;
-    }
-    catch(const Exceptions::CmdLineError& e)
+    } catch (const Exceptions::CmdLineError &e)
     {
         print_error(1, e.what());
         return 1;
-    }
-    catch(const std::runtime_error& e)
+    } catch (const std::runtime_error &e)
     {
         print_error(2, e.what());
         return 2;
-    }
-    catch(const std::exception& e)
+    } catch (const std::exception &e)
     {
         print_error(3, e.what());
         return 3;
     }
 }
-

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,10 +23,11 @@
 #include "procs.h"
 #include "harness/errorHelpers.h"
 
-#define TEST_PRIME_INT        ((1<<16)+1)
+#define TEST_PRIME_INT ((1 << 16) + 1)
 
-const char* pipe_query_functions_kernel_code = {
-    "__kernel void test_pipe_write(__global int *src, __write_only pipe int out_pipe)\n"
+const char *pipe_query_functions_kernel_code = {
+    "__kernel void test_pipe_write(__global int *src, __write_only pipe int "
+    "out_pipe)\n"
     "{\n"
     "    int gid = get_global_id(0);\n"
     "    reserve_id_t res_id;\n"
@@ -38,13 +39,15 @@ const char* pipe_query_functions_kernel_code = {
     "    }\n"
     "}\n"
     "\n"
-    "__kernel void test_pipe_query_functions(__write_only pipe int out_pipe, __global int *num_packets, __global int *max_packets)\n"
+    "__kernel void test_pipe_query_functions(__write_only pipe int out_pipe, "
+    "__global int *num_packets, __global int *max_packets)\n"
     "{\n"
     "    *max_packets = get_pipe_max_packets(out_pipe);\n"
     "    *num_packets = get_pipe_num_packets(out_pipe);\n"
     "}\n"
     "\n"
-    "__kernel void test_pipe_read(__read_only pipe int in_pipe, __global int *dst)\n"
+    "__kernel void test_pipe_read(__read_only pipe int in_pipe, __global int "
+    "*dst)\n"
     "{\n"
     "    int gid = get_global_id(0);\n"
     "    reserve_id_t res_id;\n"
@@ -54,53 +57,57 @@ const char* pipe_query_functions_kernel_code = {
     "        read_pipe(in_pipe, res_id, 0, &dst[gid]);\n"
     "        commit_read_pipe(in_pipe, res_id);\n"
     "    }\n"
-    "}\n" };
+    "}\n"
+};
 
 static int verify_result(void *ptr1, void *ptr2, int n)
 {
-    int     i, sum_output = 0;
-    cl_int    *outptr1 = (int *)ptr1;
-    cl_int    *outptr2 = (int *)ptr2;
-    int        cmp_val = ((n*3)/2) * TEST_PRIME_INT;
+    int i, sum_output = 0;
+    cl_int *outptr1 = (int *)ptr1;
+    cl_int *outptr2 = (int *)ptr2;
+    int cmp_val = ((n * 3) / 2) * TEST_PRIME_INT;
 
-    for(i = 0; i < n/2; i++)
+    for (i = 0; i < n / 2; i++)
     {
         sum_output += outptr1[i];
     }
-    for(i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
     {
         sum_output += outptr2[i];
     }
-    if(sum_output != cmp_val){
+    if (sum_output != cmp_val)
+    {
         return -1;
     }
     return 0;
 }
 
-int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_command_queue queue, int num_elements)
+int test_pipe_query_functions(cl_device_id deviceID, cl_context context,
+                              cl_command_queue queue, int num_elements)
 {
-    cl_mem        pipe;
-    cl_mem      buffers[4];
-    void        *outptr1;
-    void        *outptr2;
-    cl_int        *inptr;
-    cl_program  program;
-    cl_kernel   kernel[3];
-    size_t      global_work_size[3];
-    size_t        half_global_work_size[3];
-    size_t        global_work_size_pipe_query[3];
-    cl_int        pipe_max_packets, pipe_num_packets;
-    cl_int      err;
-    cl_int        size;
-    cl_int      i;
-    cl_event    producer_sync_event = NULL;
-    cl_event    consumer_sync_event = NULL;
-    cl_event    pipe_query_sync_event = NULL;
-    cl_event    pipe_read_sync_event = NULL;
-    MTdata      d = init_genrand( gRandomSeed );
-    const char*    kernelName[] = {"test_pipe_write", "test_pipe_read", "test_pipe_query_functions"};
+    cl_mem pipe;
+    cl_mem buffers[4];
+    void *outptr1;
+    void *outptr2;
+    cl_int *inptr;
+    cl_program program;
+    cl_kernel kernel[3];
+    size_t global_work_size[3];
+    size_t half_global_work_size[3];
+    size_t global_work_size_pipe_query[3];
+    cl_int pipe_max_packets, pipe_num_packets;
+    cl_int err;
+    cl_int size;
+    cl_int i;
+    cl_event producer_sync_event = NULL;
+    cl_event consumer_sync_event = NULL;
+    cl_event pipe_query_sync_event = NULL;
+    cl_event pipe_read_sync_event = NULL;
+    MTdata d = init_genrand(gRandomSeed);
+    const char *kernelName[] = { "test_pipe_write", "test_pipe_read",
+                                 "test_pipe_query_functions" };
 
-    size_t      min_alignment = get_min_alignment(context);
+    size_t min_alignment = get_min_alignment(context);
 
     size = sizeof(int) * num_elements;
     global_work_size[0] = (cl_uint)num_elements;
@@ -109,63 +116,78 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
 
     inptr = (int *)align_malloc(size, min_alignment);
 
-    for(i = 0; i < num_elements; i++){
+    for (i = 0; i < num_elements; i++)
+    {
         inptr[i] = TEST_PRIME_INT;
     }
 
-    buffers[0] = clCreateBuffer(context, CL_MEM_COPY_HOST_PTR, size, inptr, &err);
-    if(err){
+    buffers[0] =
+    clCreateBuffer(context, CL_MEM_COPY_HOST_PTR, size, inptr, &err);
+    if (err)
+    {
         clReleaseMemObject(buffers[0]);
         print_error(err, " clCreateBuffer failed\n");
         return -1;
     }
-    outptr1 = align_malloc(size/2, min_alignment);
+    outptr1 = align_malloc(size / 2, min_alignment);
     outptr2 = align_malloc(size, min_alignment);
-    buffers[1] = clCreateBuffer(context, CL_MEM_HOST_READ_ONLY,  size, NULL, &err);
-    if ( err ){
+    buffers[1] =
+    clCreateBuffer(context, CL_MEM_HOST_READ_ONLY, size, NULL, &err);
+    if (err)
+    {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
-        align_free( outptr1 );
-        print_error(err, " clCreateBuffer failed\n" );
+        align_free(outptr1);
+        print_error(err, " clCreateBuffer failed\n");
         return -1;
     }
 
-    buffers[2] = clCreateBuffer(context, CL_MEM_READ_WRITE,  sizeof(int), NULL, &err);
-    if ( err ){
-        clReleaseMemObject(buffers[0]);
-        clReleaseMemObject(buffers[1]);
-        clReleaseMemObject(buffers[2]);
-        align_free( outptr1 );
-        print_error(err, " clCreateBuffer failed\n" );
-        return -1;
-    }
-
-    buffers[3] = clCreateBuffer(context, CL_MEM_READ_WRITE,  sizeof(int), NULL, &err);
-    if ( err ){
+    buffers[2] =
+    clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &err);
+    if (err)
+    {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
-        clReleaseMemObject(buffers[3]);
-        align_free( outptr1 );
-        print_error(err, " clCreateBuffer failed\n" );
+        align_free(outptr1);
+        print_error(err, " clCreateBuffer failed\n");
         return -1;
     }
 
-    pipe = clCreatePipe(context, CL_MEM_HOST_NO_ACCESS, sizeof(int), num_elements, NULL, &err);
-    if(err){
+    buffers[3] =
+    clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &err);
+    if (err)
+    {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
         clReleaseMemObject(buffers[3]);
-        align_free( outptr1 );
+        align_free(outptr1);
+        print_error(err, " clCreateBuffer failed\n");
+        return -1;
+    }
+
+    pipe = clCreatePipe(context, CL_MEM_HOST_NO_ACCESS, sizeof(int),
+                        num_elements, NULL, &err);
+    if (err)
+    {
+        clReleaseMemObject(buffers[0]);
+        clReleaseMemObject(buffers[1]);
+        clReleaseMemObject(buffers[2]);
+        clReleaseMemObject(buffers[3]);
+        align_free(outptr1);
         clReleaseMemObject(pipe);
         print_error(err, " clCreatePipe failed\n");
         return -1;
     }
 
     // Create producer kernel
-    err = create_single_kernel_helper_with_build_options(context, &program, &kernel[0], 1, (const char**)&pipe_query_functions_kernel_code, kernelName[0], "-cl-std=CL2.0");
-    if(err){
+    err = create_single_kernel_helper_with_build_options(
+    context, &program, &kernel[0], 1,
+    (const char **)&pipe_query_functions_kernel_code, kernelName[0],
+    "-cl-std=CL2.0");
+    if (err)
+    {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -175,9 +197,9 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         print_error(err, "Error creating program\n");
         return -1;
     }
-    //Create consumer kernel
+    // Create consumer kernel
     kernel[1] = clCreateKernel(program, kernelName[1], &err);
-    if( kernel[1] == NULL || err != CL_SUCCESS)
+    if (kernel[1] == NULL || err != CL_SUCCESS)
     {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
@@ -188,9 +210,9 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         print_error(err, "Error creating kernel\n");
         return -1;
     }
-    //Create pipe query functions kernel
+    // Create pipe query functions kernel
     kernel[2] = clCreateKernel(program, kernelName[2], &err);
-    if( kernel[1] == NULL || err != CL_SUCCESS)
+    if (kernel[1] == NULL || err != CL_SUCCESS)
     {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
@@ -202,15 +224,16 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clSetKernelArg(kernel[0], 0, sizeof(cl_mem), (void*)&buffers[0]);
-    err |= clSetKernelArg(kernel[0], 1, sizeof(cl_mem), (void*)&pipe);
-    err |= clSetKernelArg(kernel[1], 0, sizeof(cl_mem), (void*)&pipe);
-    err |= clSetKernelArg(kernel[1], 1, sizeof(cl_mem), (void*)&buffers[1]);
-    err |= clSetKernelArg(kernel[2], 0, sizeof(cl_mem), (void*)&pipe);
-    err |= clSetKernelArg(kernel[2], 1, sizeof(cl_mem), (void*)&buffers[2]);
-    err |= clSetKernelArg(kernel[2], 2, sizeof(cl_mem), (void*)&buffers[3]);
+    err = clSetKernelArg(kernel[0], 0, sizeof(cl_mem), (void *)&buffers[0]);
+    err |= clSetKernelArg(kernel[0], 1, sizeof(cl_mem), (void *)&pipe);
+    err |= clSetKernelArg(kernel[1], 0, sizeof(cl_mem), (void *)&pipe);
+    err |= clSetKernelArg(kernel[1], 1, sizeof(cl_mem), (void *)&buffers[1]);
+    err |= clSetKernelArg(kernel[2], 0, sizeof(cl_mem), (void *)&pipe);
+    err |= clSetKernelArg(kernel[2], 1, sizeof(cl_mem), (void *)&buffers[2]);
+    err |= clSetKernelArg(kernel[2], 2, sizeof(cl_mem), (void *)&buffers[3]);
 
-    if ( err != CL_SUCCESS ){
+    if (err != CL_SUCCESS)
+    {
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -226,9 +249,11 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
     // Launch Producer kernel
-    err = clEnqueueNDRangeKernel( queue, kernel[0], 1, NULL, global_work_size, NULL, 0, NULL, &producer_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err = clEnqueueNDRangeKernel(queue, kernel[0], 1, NULL, global_work_size,
+                                 NULL, 0, NULL, &producer_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -247,9 +272,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
     // Launch Pipe query kernel
-    err = clEnqueueNDRangeKernel( queue, kernel[2], 1, NULL, global_work_size_pipe_query, NULL, 1, &producer_sync_event, &pipe_query_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err = clEnqueueNDRangeKernel(queue, kernel[2], 1, NULL,
+                                 global_work_size_pipe_query, NULL, 1,
+                                 &producer_sync_event, &pipe_query_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -267,9 +295,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int), &pipe_num_packets, 1, &pipe_query_sync_event, NULL);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err =
+    clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int),
+                        &pipe_num_packets, 1, &pipe_query_sync_event, NULL);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -288,9 +319,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
 
-    err = clEnqueueReadBuffer(queue, buffers[3], true, 0, sizeof(cl_int), &pipe_max_packets, 1, &pipe_query_sync_event, NULL);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err =
+    clEnqueueReadBuffer(queue, buffers[3], true, 0, sizeof(cl_int),
+                        &pipe_max_packets, 1, &pipe_query_sync_event, NULL);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -308,16 +342,19 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    if(pipe_num_packets != num_elements || pipe_max_packets != num_elements)
+    if (pipe_num_packets != num_elements || pipe_max_packets != num_elements)
     {
         log_error("test_pipe_query_functions failed\n");
         return -1;
     }
 
     // Launch Consumer kernel with half the previous global size
-    err = clEnqueueNDRangeKernel( queue, kernel[1], 1, NULL, half_global_work_size, NULL, 1, &producer_sync_event, &consumer_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err =
+    clEnqueueNDRangeKernel(queue, kernel[1], 1, NULL, half_global_work_size,
+                           NULL, 1, &producer_sync_event, &consumer_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -335,9 +372,11 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clEnqueueReadBuffer(queue, buffers[1], true, 0, size / 2, outptr1, 1, &consumer_sync_event, NULL);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err = clEnqueueReadBuffer(queue, buffers[1], true, 0, size / 2, outptr1, 1,
+                              &consumer_sync_event, NULL);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -356,9 +395,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
     // Launch Pipe query kernel
-    err = clEnqueueNDRangeKernel( queue, kernel[2], 1, NULL, global_work_size_pipe_query, NULL, 1, &consumer_sync_event, &pipe_query_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err = clEnqueueNDRangeKernel(queue, kernel[2], 1, NULL,
+                                 global_work_size_pipe_query, NULL, 1,
+                                 &consumer_sync_event, &pipe_query_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -376,9 +418,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int), &pipe_num_packets, 1, &pipe_query_sync_event, &pipe_read_sync_event);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err = clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int),
+                              &pipe_num_packets, 1, &pipe_query_sync_event,
+                              &pipe_read_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -398,7 +443,7 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
 
     // After consumer kernel consumes num_elements/2 from the pipe,
     // there are (num_elements - num_elements/2) remaining package in the pipe.
-    if(pipe_num_packets != (num_elements - num_elements/2))
+    if (pipe_num_packets != (num_elements - num_elements / 2))
     {
         log_error("test_pipe_query_functions failed\n");
         return -1;
@@ -406,9 +451,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
 
     // Launch Producer kernel to fill the pipe again
     global_work_size[0] = pipe_num_packets;
-    err = clEnqueueNDRangeKernel( queue, kernel[0], 1, NULL, global_work_size, NULL, 1, &pipe_read_sync_event, &producer_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err =
+    clEnqueueNDRangeKernel(queue, kernel[0], 1, NULL, global_work_size, NULL, 1,
+                           &pipe_read_sync_event, &producer_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -427,9 +475,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
     // Launch Pipe query kernel
-    err = clEnqueueNDRangeKernel( queue, kernel[2], 1, NULL, global_work_size_pipe_query, NULL, 1, &producer_sync_event, &pipe_query_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err = clEnqueueNDRangeKernel(queue, kernel[2], 1, NULL,
+                                 global_work_size_pipe_query, NULL, 1,
+                                 &producer_sync_event, &pipe_query_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -447,9 +498,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int), &pipe_num_packets, 1, &pipe_query_sync_event, &pipe_read_sync_event);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err = clEnqueueReadBuffer(queue, buffers[2], true, 0, sizeof(cl_int),
+                              &pipe_num_packets, 1, &pipe_query_sync_event,
+                              &pipe_read_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -467,7 +521,7 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    if(pipe_num_packets != num_elements)
+    if (pipe_num_packets != num_elements)
     {
         log_error("test_pipe_query_functions failed\n");
         return -1;
@@ -475,9 +529,12 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
 
     // Launch Consumer kernel to consume all packets from pipe
     global_work_size[0] = pipe_num_packets;
-    err = clEnqueueNDRangeKernel( queue, kernel[1], 1, NULL, global_work_size, NULL, 1, &pipe_read_sync_event, &consumer_sync_event );
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueNDRangeKernel failed\n" );
+    err =
+    clEnqueueNDRangeKernel(queue, kernel[1], 1, NULL, global_work_size, NULL, 1,
+                           &pipe_read_sync_event, &consumer_sync_event);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueNDRangeKernel failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -495,9 +552,11 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
         return -1;
     }
 
-    err = clEnqueueReadBuffer(queue, buffers[1], true, 0, size, outptr2, 1, &consumer_sync_event, NULL);
-    if ( err != CL_SUCCESS ){
-        print_error( err, " clEnqueueReadBuffer failed\n" );
+    err = clEnqueueReadBuffer(queue, buffers[1], true, 0, size, outptr2, 1,
+                              &consumer_sync_event, NULL);
+    if (err != CL_SUCCESS)
+    {
+        print_error(err, " clEnqueueReadBuffer failed\n");
         clReleaseMemObject(buffers[0]);
         clReleaseMemObject(buffers[1]);
         clReleaseMemObject(buffers[2]);
@@ -516,14 +575,16 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
     }
 
 
-    if( verify_result(outptr1, outptr2, num_elements )){
+    if (verify_result(outptr1, outptr2, num_elements))
+    {
         log_error("test_pipe_query_functions failed\n");
         return -1;
     }
-    else {
+    else
+    {
         log_info("test_pipe_query_functions passed\n");
     }
-    //cleanup
+    // cleanup
     clReleaseMemObject(buffers[0]);
     clReleaseMemObject(buffers[1]);
     clReleaseMemObject(buffers[2]);
@@ -541,4 +602,3 @@ int test_pipe_query_functions(cl_device_id deviceID, cl_context context, cl_comm
 
     return 0;
 }
-

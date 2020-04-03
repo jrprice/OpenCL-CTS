@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -46,11 +46,10 @@ static const char *local_linear_id_2d_code =
 "}\n";
 
 
-static int
-verify_local_linear_id(int *result, int n)
+static int verify_local_linear_id(int *result, int n)
 {
     int i;
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         if (result[i] == 0)
         {
@@ -63,50 +62,60 @@ verify_local_linear_id(int *result, int n)
 }
 
 
-int
-test_local_linear_id(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+int test_local_linear_id(cl_device_id device, cl_context context,
+                         cl_command_queue queue, int num_elements)
 {
-      cl_mem streams;
-      cl_program program[2];
-      cl_kernel kernel[2];
+    cl_mem streams;
+    cl_program program[2];
+    cl_kernel kernel[2];
 
     int *output_ptr;
-      size_t threads[2];
-      int err;
-      num_elements = (int)sqrt((float)num_elements);
-      int length = num_elements * num_elements;
+    size_t threads[2];
+    int err;
+    num_elements = (int)sqrt((float)num_elements);
+    int length = num_elements * num_elements;
 
-      output_ptr   = (cl_int*)malloc(sizeof(int) * length);
+    output_ptr = (cl_int *)malloc(sizeof(int) * length);
 
-    streams = clCreateBuffer(context, (cl_mem_flags)(CL_MEM_READ_WRITE), length*sizeof(int), NULL, &err);
-    test_error( err, "clCreateBuffer failed.");
+    streams = clCreateBuffer(context, (cl_mem_flags)(CL_MEM_READ_WRITE),
+                             length * sizeof(int), NULL, &err);
+    test_error(err, "clCreateBuffer failed.");
 
-    err = create_single_kernel_helper_with_build_options(context, &program[0], &kernel[0], 1, &local_linear_id_1d_code, "test_local_linear_id_1d", "-cl-std=CL2.0");
-    test_error( err, "create_single_kernel_helper failed");
-    err = create_single_kernel_helper_with_build_options(context, &program[1], &kernel[1], 1, &local_linear_id_2d_code, "test_local_linear_id_2d", "-cl-std=CL2.0");
-    test_error( err, "create_single_kernel_helper failed");
+    err = create_single_kernel_helper_with_build_options(
+    context, &program[0], &kernel[0], 1, &local_linear_id_1d_code,
+    "test_local_linear_id_1d", "-cl-std=CL2.0");
+    test_error(err, "create_single_kernel_helper failed");
+    err = create_single_kernel_helper_with_build_options(
+    context, &program[1], &kernel[1], 1, &local_linear_id_2d_code,
+    "test_local_linear_id_2d", "-cl-std=CL2.0");
+    test_error(err, "create_single_kernel_helper failed");
 
-    err  = clSetKernelArg(kernel[0], 0, sizeof streams, &streams);
-    test_error( err, "clSetKernelArgs failed.");
-    err  = clSetKernelArg(kernel[1], 0, sizeof streams, &streams);
-    test_error( err, "clSetKernelArgs failed.");
+    err = clSetKernelArg(kernel[0], 0, sizeof streams, &streams);
+    test_error(err, "clSetKernelArgs failed.");
+    err = clSetKernelArg(kernel[1], 0, sizeof streams, &streams);
+    test_error(err, "clSetKernelArgs failed.");
 
     threads[0] = (size_t)num_elements;
     threads[1] = (size_t)num_elements;
-    err = clEnqueueNDRangeKernel(queue, kernel[1], 2, NULL, threads, NULL, 0, NULL, NULL);
-    test_error( err, "clEnqueueNDRangeKernel failed.");
+    err = clEnqueueNDRangeKernel(queue, kernel[1], 2, NULL, threads, NULL, 0,
+                                 NULL, NULL);
+    test_error(err, "clEnqueueNDRangeKernel failed.");
 
-    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, length*sizeof(int), output_ptr, 0, NULL, NULL);
-    test_error( err, "clEnqueueReadBuffer failed.");
+    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, length * sizeof(int),
+                              output_ptr, 0, NULL, NULL);
+    test_error(err, "clEnqueueReadBuffer failed.");
 
     err = verify_local_linear_id(output_ptr, length);
 
     threads[0] = (size_t)num_elements;
-    err = clEnqueueNDRangeKernel(queue, kernel[0], 1, NULL, threads, NULL, 0, NULL, NULL);
-    test_error( err, "clEnqueueNDRangeKernel failed.");
+    err = clEnqueueNDRangeKernel(queue, kernel[0], 1, NULL, threads, NULL, 0,
+                                 NULL, NULL);
+    test_error(err, "clEnqueueNDRangeKernel failed.");
 
-    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, num_elements*sizeof(int), output_ptr, 0, NULL, NULL);
-    test_error( err, "clEnqueueReadBuffer failed.");
+    err =
+    clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, num_elements * sizeof(int),
+                        output_ptr, 0, NULL, NULL);
+    test_error(err, "clEnqueueReadBuffer failed.");
 
     err = verify_local_linear_id(output_ptr, num_elements);
 

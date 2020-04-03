@@ -1,14 +1,16 @@
 /******************************************************************
 Copyright (c) 2016 The Khronos Group Inc. All Rights Reserved.
 
-This code is protected by copyright laws and contains material proprietary to the Khronos Group, Inc.
-This is UNPUBLISHED PROPRIETARY SOURCE CODE that may not be disclosed in whole or in part to
-third parties, and may not be reproduced, republished, distributed, transmitted, displayed,
-broadcast or otherwise exploited in any manner without the express prior written permission
-of Khronos Group. The receipt or possession of this code does not convey any rights to reproduce,
-disclose, or distribute its contents, or to manufacture, use, or sell anything that it may describe,
-in whole or in part other than under the terms of the Khronos Adopters Agreement
-or Khronos Conformance Test Source License Agreement as executed between Khronos and the recipient.
+This code is protected by copyright laws and contains material proprietary to
+the Khronos Group, Inc. This is UNPUBLISHED PROPRIETARY SOURCE CODE that may not
+be disclosed in whole or in part to third parties, and may not be reproduced,
+republished, distributed, transmitted, displayed, broadcast or otherwise
+exploited in any manner without the express prior written permission of Khronos
+Group. The receipt or possession of this code does not convey any rights to
+reproduce, disclose, or distribute its contents, or to manufacture, use, or sell
+anything that it may describe, in whole or in part other than under the terms of
+the Khronos Adopters Agreement or Khronos Conformance Test Source License
+Agreement as executed between Khronos and the recipient.
 ******************************************************************/
 
 #include "testBase.h"
@@ -18,13 +20,10 @@ or Khronos Conformance Test Source License Agreement as executed between Khronos
 #include <string>
 
 
-template<typename T>
-int test_op_lifetime(cl_device_id deviceID,
-                     cl_context context,
-                     cl_command_queue queue,
-                     const char *name,
-                     const std::vector<T> &h_lhs,
-                     const std::vector<T> &h_rhs,
+template <typename T>
+int test_op_lifetime(cl_device_id deviceID, cl_context context,
+                     cl_command_queue queue, const char *name,
+                     const std::vector<T> &h_lhs, const std::vector<T> &h_rhs,
                      const std::vector<T> &h_ref)
 {
 
@@ -32,16 +31,20 @@ int test_op_lifetime(cl_device_id deviceID,
     int num = (int)h_lhs.size();
     size_t bytes = num * sizeof(T);
 
-    clMemWrapper lhs = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+    clMemWrapper lhs =
+    clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create lhs buffer");
 
-    err = clEnqueueWriteBuffer(queue, lhs, CL_TRUE, 0, bytes, &h_lhs[0], 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(queue, lhs, CL_TRUE, 0, bytes, &h_lhs[0], 0,
+                               NULL, NULL);
     SPIRV_CHECK_ERROR(err, "Failed to copy to lhs buffer");
 
-    clMemWrapper rhs = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+    clMemWrapper rhs =
+    clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create rhs buffer");
 
-    err = clEnqueueWriteBuffer(queue, rhs, CL_TRUE, 0, bytes, &h_rhs[0], 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(queue, rhs, CL_TRUE, 0, bytes, &h_rhs[0], 0,
+                               NULL, NULL);
     SPIRV_CHECK_ERROR(err, "Failed to copy to rhs buffer");
 
     clProgramWrapper prog;
@@ -51,7 +54,8 @@ int test_op_lifetime(cl_device_id deviceID,
     clKernelWrapper kernel = clCreateKernel(prog, name, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create spv kernel");
 
-    clMemWrapper res = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    clMemWrapper res =
+    clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create res buffer");
 
     err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &res);
@@ -64,15 +68,19 @@ int test_op_lifetime(cl_device_id deviceID,
     SPIRV_CHECK_ERROR(err, "Failed to set arg 2");
 
     size_t global = num;
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0, NULL,
+                                 NULL);
     SPIRV_CHECK_ERROR(err, "Failed to enqueue cl kernel");
 
     std::vector<T> h_res(num);
-    err = clEnqueueReadBuffer(queue, res, CL_TRUE, 0, bytes, &h_res[0], 0, NULL, NULL);
+    err = clEnqueueReadBuffer(queue, res, CL_TRUE, 0, bytes, &h_res[0], 0, NULL,
+                              NULL);
     SPIRV_CHECK_ERROR(err, "Failed to read from ref");
 
-    for (int i = 0; i < num; i++) {
-        if (h_res[i] != h_ref[i]) {
+    for (int i = 0; i < num; i++)
+    {
+        if (h_res[i] != h_ref[i])
+        {
             log_error("Values do not match at location %d\n", i);
             return -1;
         }
@@ -80,25 +88,25 @@ int test_op_lifetime(cl_device_id deviceID,
     return 0;
 }
 
-#define TEST_LIFETIME(name)                                 \
-    TEST_SPIRV_FUNC(op_##name)                              \
-    {                                                       \
-        const int num = 1 << 10;                            \
-        RandomSeed seed(gRandomSeed);                       \
-                                                            \
-        std::vector<cl_int> lhs(num);                       \
-        std::vector<cl_int> rhs(num);                       \
-        std::vector<cl_int> out(num);                       \
-                                                            \
-        for (int i = 0; i < num; i++) {                     \
-            lhs[i] = genrand<int>(seed);                    \
-            rhs[i] = genrand<int>(seed);                    \
-            out[i] = lhs[i] - rhs[i];                       \
-        }                                                   \
-                                                            \
-        return test_op_lifetime(deviceID, context, queue,   \
-                                #name,                      \
-                                lhs, rhs, out);             \
-    }                                                       \
+#define TEST_LIFETIME(name)                                                    \
+    TEST_SPIRV_FUNC(op_##name)                                                 \
+    {                                                                          \
+        const int num = 1 << 10;                                               \
+        RandomSeed seed(gRandomSeed);                                          \
+                                                                               \
+        std::vector<cl_int> lhs(num);                                          \
+        std::vector<cl_int> rhs(num);                                          \
+        std::vector<cl_int> out(num);                                          \
+                                                                               \
+        for (int i = 0; i < num; i++)                                          \
+        {                                                                      \
+            lhs[i] = genrand<int>(seed);                                       \
+            rhs[i] = genrand<int>(seed);                                       \
+            out[i] = lhs[i] - rhs[i];                                          \
+        }                                                                      \
+                                                                               \
+        return test_op_lifetime(deviceID, context, queue, #name, lhs, rhs,     \
+                                out);                                          \
+    }
 
 TEST_LIFETIME(lifetime_simple)

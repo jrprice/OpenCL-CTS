@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,13 +27,11 @@
 
 #include "vec_helpers.hpp"
 
-namespace detail
-{
+namespace detail {
 
-template<class OUT1>
-struct base_func_type
-{   
-    virtual ~base_func_type() {};
+template <class OUT1> struct base_func_type
+{
+    virtual ~base_func_type(){};
 
     // Returns function name
     virtual std::string str() = 0;
@@ -47,61 +45,46 @@ struct base_func_type
     }
 
     // Returns required defines and pragmas.
-    virtual std::string defs()
-    {
-        return "";
-    }
+    virtual std::string defs() { return ""; }
 
     // Returns required OpenCL C++ headers.
-    virtual std::string headers()
-    {
-        return "";
-    }
+    virtual std::string headers() { return ""; }
 
     // Return true if OUT1 type in OpenCL kernel should be treated
     // as bool type; false otherwise.
-    bool is_out_bool()
-    {
-        return false;
-    }
+    bool is_out_bool() { return false; }
 
     // Max ULP error, that is error should be raised when
     // if Ulp_Error(result, expected) > ulp()
-    float ulp()
-    {
-        return 0.0f;
-    }
+    float ulp() { return 0.0f; }
 
     // Should we check ULP error when verifing if the result is
-    // correct? 
+    // correct?
     //
-    // (This effects how are_equal() function works, 
+    // (This effects how are_equal() function works,
     // it may not have effect if verify() method in derived
     // class does not use are_equal() function.)
     //
     // Only for FP numbers/vectors
-    bool use_ulp()
-    {
-        return true;
-    }
+    bool use_ulp() { return true; }
 
     // Max error. Error should be raised if
     // abs(result - expected) > delta(.., expected)
     //
     // Default value: 0.001 * expected
     //
-    // (This effects how are_equal() function works, 
+    // (This effects how are_equal() function works,
     // it may not have effect if verify() method in derived
     // class does not use are_equal() function.)
     //
     // Only for FP numbers/vectors
-    template<class T>
+    template <class T>
     typename make_vector_type<cl_double, vector_size<T>::value>::type
     delta(const T& expected)
     {
-        typedef 
-            typename make_vector_type<cl_double, vector_size<T>::value>::type
-            delta_vector_type;
+        typedef
+        typename make_vector_type<cl_double, vector_size<T>::value>::type
+        delta_vector_type;
         auto e = detail::make_value<delta_vector_type>(1e-3);
         return detail::multiply<delta_vector_type>(e, expected);
     }

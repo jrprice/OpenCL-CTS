@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,32 +18,22 @@
 
 #include "../common.hpp"
 
-// Returns type name (in OpenCL device). 
+// Returns type name (in OpenCL device).
 // cl_uint - "uint", cl_float2 -> "float2"
-template<class Type>
-std::string type_name()
-{
-    return "unknown";
-}
+template <class Type> std::string type_name() { return "unknown"; }
 
-#define ADD_TYPE_NAME(Type, str) \
-    template<> \
-    std::string type_name<Type>() \
-    { \
-        return #str; \
-    }
+#define ADD_TYPE_NAME(Type, str)                                               \
+    template <> std::string type_name<Type>() { return #str; }
 
-#define ADD_TYPE_NAME2(Type) \
-    ADD_TYPE_NAME(cl_ ## Type, Type)
+#define ADD_TYPE_NAME2(Type) ADD_TYPE_NAME(cl_##Type, Type)
 
-#define ADD_TYPE_NAME3(Type, x) \
-    ADD_TYPE_NAME2(Type ## x)
+#define ADD_TYPE_NAME3(Type, x) ADD_TYPE_NAME2(Type##x)
 
-#define ADD_TYPE_NAMES(Type) \
-    ADD_TYPE_NAME2(Type) \
-    ADD_TYPE_NAME3(Type, 2) \
-    ADD_TYPE_NAME3(Type, 4) \
-    ADD_TYPE_NAME3(Type, 8) \
+#define ADD_TYPE_NAMES(Type)                                                   \
+    ADD_TYPE_NAME2(Type)                                                       \
+    ADD_TYPE_NAME3(Type, 2)                                                    \
+    ADD_TYPE_NAME3(Type, 4)                                                    \
+    ADD_TYPE_NAME3(Type, 8)                                                    \
     ADD_TYPE_NAME3(Type, 16)
 
 ADD_TYPE_NAMES(char)

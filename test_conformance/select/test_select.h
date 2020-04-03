@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,7 +28,8 @@
 #endif
 
 // Defines the set of types we support (no support for double)
-typedef enum {
+typedef enum
+{
     kuchar = 0,
     kchar = 1,
     kushort = 2,
@@ -39,13 +40,13 @@ typedef enum {
     kulong = 7,
     klong = 8,
     kdouble = 9,
-    kTypeCount  // always goes last
+    kTypeCount // always goes last
 } Type;
 
 
 // Support max vector size of 16
-#define kVectorSizeCount    6
-#define kMaxVectorSize      16
+#define kVectorSizeCount 6
+#define kMaxVectorSize 16
 
 
 // Type names and their sizes in bytes
@@ -64,37 +65,42 @@ extern Select refSelects[kTypeCount][2];
 extern Select vrefSelects[kTypeCount][2];
 
 // Check functions for each output type
-typedef size_t (*CheckResults)(void *out1, void *out2, size_t count, size_t vectorSize);
+typedef size_t (*CheckResults)(void *out1, void *out2, size_t count,
+                               size_t vectorSize);
 extern CheckResults checkResults[kTypeCount];
 
 // Helpful macros
 
 // The next three functions check on different return values.  Returns -1
 // if the check failed
-#define checkErr(err, msg)                \
-    if (err != CL_SUCCESS) {                \
-    log_error("%s failed errcode:%d\n", msg, err);    \
-    return -1;                    \
+#define checkErr(err, msg)                                                     \
+    if (err != CL_SUCCESS)                                                     \
+    {                                                                          \
+        log_error("%s failed errcode:%d\n", msg, err);                         \
+        return -1;                                                             \
     }
 
-#define checkZero(val, msg)                \
-    if (val == 0) {                    \
-    log_error("%s failed errcode:%d\n", msg, err);    \
-    return -1;                    \
+#define checkZero(val, msg)                                                    \
+    if (val == 0)                                                              \
+    {                                                                          \
+        log_error("%s failed errcode:%d\n", msg, err);                         \
+        return -1;                                                             \
     }
 
-#define checkNull(ptr, msg)            \
-    if (!ptr) {                    \
-    log_error("%s failed\n", msg);        \
-    return -1;                \
+#define checkNull(ptr, msg)                                                    \
+    if (!ptr)                                                                  \
+    {                                                                          \
+        log_error("%s failed\n", msg);                                         \
+        return -1;                                                             \
     }
 
 // When a helper returns a negative one, we want to return from main
 // with negative one. This helper prevents me from having to write
 // this multiple time
-#define checkHelperErr(err)            \
-    if (err == -1) {                \
-    return err;                \
+#define checkHelperErr(err)                                                    \
+    if (err == -1)                                                             \
+    {                                                                          \
+        return err;                                                            \
     }
 
 

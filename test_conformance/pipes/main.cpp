@@ -20,28 +20,33 @@
 #include <stdio.h>
 #include <string.h>
 
-test_status InitCL(cl_device_id device) {
-  auto version = get_device_cl_version(device);
-  auto expected_min_version = Version(2, 0);
-  if (version < expected_min_version) {
-    version_expected_info("Test", expected_min_version.to_string().c_str(), version.to_string().c_str());
-    return TEST_SKIP;
-  }
+test_status InitCL(cl_device_id device)
+{
+    auto version = get_device_cl_version(device);
+    auto expected_min_version = Version(2, 0);
+    if (version < expected_min_version)
+    {
+        version_expected_info("Test", expected_min_version.to_string().c_str(),
+                              version.to_string().c_str());
+        return TEST_SKIP;
+    }
 
-  int error;
-  cl_uint max_packet_size;
-  error = clGetDeviceInfo(device, CL_DEVICE_PIPE_MAX_PACKET_SIZE,
-                          sizeof(max_packet_size), &max_packet_size, NULL);
-  if (error != CL_SUCCESS) {
-    print_error(error, "Unable to get pipe max packet size");
-    return TEST_FAIL;
-  }
+    int error;
+    cl_uint max_packet_size;
+    error = clGetDeviceInfo(device, CL_DEVICE_PIPE_MAX_PACKET_SIZE,
+                            sizeof(max_packet_size), &max_packet_size, NULL);
+    if (error != CL_SUCCESS)
+    {
+        print_error(error, "Unable to get pipe max packet size");
+        return TEST_FAIL;
+    }
 
-  if ((max_packet_size == 0) && (version > Version(2,2))) {
-    return TEST_SKIP;
-  }
+    if ((max_packet_size == 0) && (version > Version(2, 2)))
+    {
+        return TEST_SKIP;
+    }
 
-  return TEST_PASS;
+    return TEST_PASS;
 }
 
 test_definition test_list[] = {
@@ -104,7 +109,8 @@ test_definition test_list[] = {
 
 const int test_num = ARRAY_SIZE(test_list);
 
-int main(int argc, const char *argv[]) {
-  return runTestHarnessWithCheck(argc, argv, test_num, test_list, false,
-                                 0, InitCL);
+int main(int argc, const char *argv[])
+{
+    return runTestHarnessWithCheck(argc, argv, test_num, test_list, false, 0,
+                                   InitCL);
 }

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if !defined (__APPLE__)
+#if !defined(__APPLE__)
 #include <CL/cl.h>
 #include "gles/gl_headers.h"
 #include <CL/cl_gl.h>
@@ -49,23 +49,30 @@
 #include "gl/helpers.h"
 #endif
 
-extern const char *get_kernel_suffix( cl_image_format *format );
-extern const char *get_write_conversion( cl_image_format *format, ExplicitType type);
-extern ExplicitType get_read_kernel_type( cl_image_format *format );
-extern ExplicitType get_write_kernel_type( cl_image_format *format );
+extern const char *get_kernel_suffix(cl_image_format *format);
+extern const char *get_write_conversion(cl_image_format *format,
+                                        ExplicitType type);
+extern ExplicitType get_read_kernel_type(cl_image_format *format);
+extern ExplicitType get_write_kernel_type(cl_image_format *format);
 
-extern char * convert_to_expected( void * inputBuffer, size_t numPixels, ExplicitType inType, ExplicitType outType );
-extern int validate_integer_results( void *expectedResults, void *actualResults, size_t width, size_t height, size_t typeSize );
-extern int validate_integer_results( void *expectedResults, void *actualResults, size_t width, size_t height, size_t depth, size_t typeSize );
-extern int validate_float_results( void *expectedResults, void *actualResults, size_t width, size_t height );
-extern int validate_float_results( void *expectedResults, void *actualResults, size_t width, size_t height, size_t depth );
+extern char *convert_to_expected(void *inputBuffer, size_t numPixels,
+                                 ExplicitType inType, ExplicitType outType);
+extern int validate_integer_results(void *expectedResults, void *actualResults,
+                                    size_t width, size_t height,
+                                    size_t typeSize);
+extern int validate_integer_results(void *expectedResults, void *actualResults,
+                                    size_t width, size_t height, size_t depth,
+                                    size_t typeSize);
+extern int validate_float_results(void *expectedResults, void *actualResults,
+                                  size_t width, size_t height);
+extern int validate_float_results(void *expectedResults, void *actualResults,
+                                  size_t width, size_t height, size_t depth);
 
-extern int CheckGLObjectInfo(cl_mem mem, cl_gl_object_type expected_cl_gl_type, GLuint expected_gl_name,
-                             GLenum expected_cl_gl_texture_target, GLint expected_cl_gl_mipmap_level);
+extern int CheckGLObjectInfo(cl_mem mem, cl_gl_object_type expected_cl_gl_type,
+                             GLuint expected_gl_name,
+                             GLenum expected_cl_gl_texture_target,
+                             GLint expected_cl_gl_mipmap_level);
 
 extern bool CheckGLIntegerExtensionSupport();
 
 #endif // _testBase_h
-
-
-

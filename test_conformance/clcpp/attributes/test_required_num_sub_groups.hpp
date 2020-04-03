@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -50,7 +50,8 @@ struct output_type
 )";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
 std::string generate_source(test_options options)
@@ -83,11 +84,15 @@ std::string generate_source(test_options options)
     if (options.spec_const)
     {
         s << "#include <opencl_spec_constant>" << std::endl;
-        s << "cl::spec_constant<uint, 1> num_sub_groups_spec{ 1234567890 };" << std::endl;
+        s << "cl::spec_constant<uint, 1> num_sub_groups_spec{ 1234567890 };"
+          << std::endl;
     }
 
     s << source_common << std::endl;
-    s << "[[cl::required_num_sub_groups(" << (options.spec_const ? "num_sub_groups_spec" : std::to_string(options.num_sub_groups)) << ")]]";
+    s << "[[cl::required_num_sub_groups("
+      << (options.spec_const ? "num_sub_groups_spec"
+                             : std::to_string(options.num_sub_groups))
+      << ")]]";
     s << R"(
     kernel void test(global_ptr<output_type[]> output)
     {
@@ -101,14 +106,16 @@ std::string generate_source(test_options options)
 }
 #endif
 
-int test(cl_device_id device, cl_context context, cl_command_queue queue, test_options options)
+int test(cl_device_id device, cl_context context, cl_command_queue queue,
+         test_options options)
 {
     int error = CL_SUCCESS;
 
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
     if (!is_extension_available(device, "cl_khr_subgroups"))
     {
-        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. Skipping tests.\n");
+        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. "
+                 "Skipping tests.\n");
         return CL_SUCCESS;
     }
 #endif
@@ -120,22 +127,19 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
     std::string source = generate_source(options);
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 // Only OpenCL C++ to SPIR-V compilation
 #if defined(DEVELOPMENT) && defined(ONLY_SPIRV_COMPILATION)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
     return error;
 // Use OpenCL C kernels instead of OpenCL C++ kernels (test C++ host code)
 #elif defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name, "-cl-std=CL2.0", false
-    );
+    error = create_opencl_kernel(context, &program, &kernel, source,
+                                 kernel_name, "-cl-std=CL2.0", false);
     RETURN_ON_ERROR(error)
 // Normal run
 #else
@@ -145,31 +149,34 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 
     if (options.spec_const)
     {
-        cl_uint spec_num_sub_groups = static_cast<cl_uint>(options.num_sub_groups);
-        error = clSetProgramSpecializationConstant(program, 1, sizeof(cl_uint), &spec_num_sub_groups);
+        cl_uint spec_num_sub_groups =
+        static_cast<cl_uint>(options.num_sub_groups);
+        error = clSetProgramSpecializationConstant(program, 1, sizeof(cl_uint),
+                                                   &spec_num_sub_groups);
         RETURN_ON_CL_ERROR(error, "clSetProgramSpecializationConstant")
     }
 
     error = build_program_create_kernel_helper(
-        context, &program, &kernel, 1, &source_c_str, kernel_name.c_str()
-    );
+    context, &program, &kernel, 1, &source_c_str, kernel_name.c_str());
     RETURN_ON_ERROR(error)
 #endif
 
     size_t compile_num_sub_groups;
-    error = clGetKernelSubGroupInfo(kernel, device, CL_KERNEL_COMPILE_NUM_SUB_GROUPS,
-        0, NULL,
-        sizeof(size_t), &compile_num_sub_groups, NULL);
+    error = clGetKernelSubGroupInfo(
+    kernel, device, CL_KERNEL_COMPILE_NUM_SUB_GROUPS, 0, NULL, sizeof(size_t),
+    &compile_num_sub_groups, NULL);
     RETURN_ON_CL_ERROR(error, "clGetKernelSubGroupInfo")
     if (compile_num_sub_groups != options.num_sub_groups)
     {
         RETURN_ON_ERROR_MSG(-1,
-            "CL_KERNEL_COMPILE_NUM_SUB_GROUPS did not return correct value (expected %lu, got %lu)",
-            options.num_sub_groups, compile_num_sub_groups
-        )
+                            "CL_KERNEL_COMPILE_NUM_SUB_GROUPS did not return "
+                            "correct value (expected %lu, got %lu)",
+                            options.num_sub_groups, compile_num_sub_groups)
     }
 
-    cl_mem output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(output_type) * options.max_count, NULL, &error);
+    cl_mem output_buffer =
+    clCreateBuffer(context, CL_MEM_READ_WRITE,
+                   sizeof(output_type) * options.max_count, NULL, &error);
     RETURN_ON_CL_ERROR(error, "clCreateBuffer")
 
     error = clSetKernelArg(kernel, 0, sizeof(output_buffer), &output_buffer);
@@ -185,7 +192,8 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
         {
             size_t global_size[3] = { 1, 1, 1 };
             size_t count = count_dis(gen);
-            std::uniform_int_distribution<size_t> global_size_dis(1, static_cast<size_t>(pow(count, 1.0 / dim)));
+            std::uniform_int_distribution<size_t> global_size_dis(
+            1, static_cast<size_t>(pow(count, 1.0 / dim)));
             for (size_t d = 0; d < dim; d++)
             {
                 global_size[d] = global_size_dis(gen);
@@ -193,44 +201,47 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
             count = global_size[0] * global_size[1] * global_size[2];
 
             size_t local_size[3] = { 1, 1, 1 };
-            error = clGetKernelSubGroupInfo(kernel, device, CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT,
-                sizeof(size_t), &options.num_sub_groups,
-                sizeof(size_t) * dim, local_size, NULL);
+            error = clGetKernelSubGroupInfo(
+            kernel, device, CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT,
+            sizeof(size_t), &options.num_sub_groups, sizeof(size_t) * dim,
+            local_size, NULL);
             RETURN_ON_CL_ERROR(error, "clGetKernelSubGroupInfo")
             if (local_size[0] == 0 || local_size[1] != 1 || local_size[2] != 1)
             {
                 RETURN_ON_ERROR_MSG(-1,
-                    "CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT did not return correct value"
-                )
+                                    "CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT "
+                                    "did not return correct value")
             }
 
             size_t sub_group_count_for_ndrange;
-            error = clGetKernelSubGroupInfo(kernel, device, CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
-                sizeof(size_t) * dim, local_size,
-                sizeof(size_t), &sub_group_count_for_ndrange, NULL);
+            error = clGetKernelSubGroupInfo(
+            kernel, device, CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
+            sizeof(size_t) * dim, local_size, sizeof(size_t),
+            &sub_group_count_for_ndrange, NULL);
             RETURN_ON_CL_ERROR(error, "clGetKernelSubGroupInfo")
             if (sub_group_count_for_ndrange != options.num_sub_groups)
             {
-                RETURN_ON_ERROR_MSG(-1,
-                    "CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE did not return correct value (expected %lu, got %lu)",
-                    options.num_sub_groups, sub_group_count_for_ndrange
-                )
+                RETURN_ON_ERROR_MSG(
+                -1,
+                "CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE did not return correct "
+                "value (expected %lu, got %lu)",
+                options.num_sub_groups, sub_group_count_for_ndrange)
             }
 
             const char pattern = 0;
-            error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern), 0, sizeof(output_type) * count, 0, NULL, NULL);
+            error =
+            clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern),
+                                0, sizeof(output_type) * count, 0, NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueFillBuffer")
 
-            error = clEnqueueNDRangeKernel(queue, kernel, dim, NULL, global_size, local_size, 0, NULL, NULL);
+            error = clEnqueueNDRangeKernel(
+            queue, kernel, dim, NULL, global_size, local_size, 0, NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
             std::vector<output_type> output(count);
             error = clEnqueueReadBuffer(
-                queue, output_buffer, CL_TRUE,
-                0, sizeof(output_type) * count,
-                static_cast<void *>(output.data()),
-                0, NULL, NULL
-            );
+            queue, output_buffer, CL_TRUE, 0, sizeof(output_type) * count,
+            static_cast<void *>(output.data()), 0, NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueReadBuffer")
 
             for (size_t gid = 0; gid < count; gid++)
@@ -239,11 +250,14 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 
                 if (o.enqueued_num_sub_groups != options.num_sub_groups)
                 {
-                    RETURN_ON_ERROR_MSG(-1, "get_enqueued_num_sub_groups does not equal to required_num_sub_groups")
+                    RETURN_ON_ERROR_MSG(-1,
+                                        "get_enqueued_num_sub_groups does not "
+                                        "equal to required_num_sub_groups")
                 }
                 if (o.num_sub_groups > options.num_sub_groups)
                 {
-                    RETURN_ON_ERROR_MSG(-1, "get_num_sub_groups did not return correct value")
+                    RETURN_ON_ERROR_MSG(
+                    -1, "get_num_sub_groups did not return correct value")
                 }
             }
         }
@@ -256,26 +270,30 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 }
 
 AUTO_TEST_CASE(test_required_num_sub_groups)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     int error = CL_SUCCESS;
 
     cl_uint max_num_sub_groups;
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_NUM_SUB_GROUPS, sizeof(max_num_sub_groups), &max_num_sub_groups, NULL);
+    error =
+    clGetDeviceInfo(device, CL_DEVICE_MAX_NUM_SUB_GROUPS,
+                    sizeof(max_num_sub_groups), &max_num_sub_groups, NULL);
     RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
     for (bool spec_const : { false, true })
-    for (size_t num_sub_groups = 1; num_sub_groups <= max_num_sub_groups; num_sub_groups++)
-    {
-        test_options options;
-        options.spec_const = spec_const;
-        options.num_sub_groups = num_sub_groups;
-        options.num_tests = 100;
-        options.max_count = num_elements;
+        for (size_t num_sub_groups = 1; num_sub_groups <= max_num_sub_groups;
+             num_sub_groups++)
+        {
+            test_options options;
+            options.spec_const = spec_const;
+            options.num_sub_groups = num_sub_groups;
+            options.num_tests = 100;
+            options.max_count = num_elements;
 
-        error = test(device, context, queue, options);
-        RETURN_ON_ERROR(error)
-    }
+            error = test(device, context, queue, options);
+            RETURN_ON_ERROR(error)
+        }
 
     return error;
 }

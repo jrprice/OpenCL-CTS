@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,30 +18,27 @@
 
 #include "../common.hpp"
 
-// Returns 1 if Type is a scalar type; otherwise if it's a vector type, 
-// it returns number of components in that Type. 
-template<class Type>
-struct vector_size
+// Returns 1 if Type is a scalar type; otherwise if it's a vector type,
+// it returns number of components in that Type.
+template <class Type> struct vector_size
 {
     const static size_t value = 1;
 };
 
-#define ADD_VECTOR_SIZE_TYPE(Type, n) \
-    template<> \
-    struct vector_size<Type ## n> \
-    { \
-        const static size_t value = n; \
+#define ADD_VECTOR_SIZE_TYPE(Type, n)                                          \
+    template <> struct vector_size<Type##n>                                    \
+    {                                                                          \
+        const static size_t value = n;                                         \
     };
 
-#define ADD_VECTOR_SIZE_TYPES(Type) \
-    template<> \
-    struct vector_size<Type> \
-    { \
-        const static size_t value = 1; \
-    }; \
-    ADD_VECTOR_SIZE_TYPE(Type, 2) \
-    ADD_VECTOR_SIZE_TYPE(Type, 4) \
-    ADD_VECTOR_SIZE_TYPE(Type, 8) \
+#define ADD_VECTOR_SIZE_TYPES(Type)                                            \
+    template <> struct vector_size<Type>                                       \
+    {                                                                          \
+        const static size_t value = 1;                                         \
+    };                                                                         \
+    ADD_VECTOR_SIZE_TYPE(Type, 2)                                              \
+    ADD_VECTOR_SIZE_TYPE(Type, 4)                                              \
+    ADD_VECTOR_SIZE_TYPE(Type, 8)                                              \
     ADD_VECTOR_SIZE_TYPE(Type, 16)
 
 ADD_VECTOR_SIZE_TYPES(cl_char)

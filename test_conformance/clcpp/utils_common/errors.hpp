@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,8 @@
 
 std::string get_cl_error_string(cl_int error)
 {
-#define CASE_CL_ERROR(x) case x: return #x;
+#define CASE_CL_ERROR(x)                                                       \
+    case x: return #x;
     switch (error)
     {
         CASE_CL_ERROR(CL_SUCCESS)
@@ -96,39 +97,40 @@ std::string get_cl_error_string(cl_int error)
 #undef CASE_CL_ERROR
 }
 
-#define CHECK_ERROR(x) \
-    if(x != CL_SUCCESS) \
-    { \
-        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);\
+#define CHECK_ERROR(x)                                                         \
+    if (x != CL_SUCCESS)                                                       \
+    {                                                                          \
+        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);   \
     }
-#define CHECK_ERROR_MSG(x, ...) \
-    if(x != CL_SUCCESS) \
-    { \
-        log_error("ERROR: " __VA_ARGS__);\
-        log_error("\n");\
-        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);\
+#define CHECK_ERROR_MSG(x, ...)                                                \
+    if (x != CL_SUCCESS)                                                       \
+    {                                                                          \
+        log_error("ERROR: " __VA_ARGS__);                                      \
+        log_error("\n");                                                       \
+        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);   \
     }
-#define RETURN_ON_ERROR(x) \
-    if(x != CL_SUCCESS) \
-    { \
-        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);\
-        return x;\
+#define RETURN_ON_ERROR(x)                                                     \
+    if (x != CL_SUCCESS)                                                       \
+    {                                                                          \
+        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);   \
+        return x;                                                              \
     }
-#define RETURN_ON_ERROR_MSG(x, ...) \
-    if(x != CL_SUCCESS) \
-    { \
-        log_error("ERROR: " __VA_ARGS__);\
-        log_error("\n");\
-        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);\
-        return x;\
+#define RETURN_ON_ERROR_MSG(x, ...)                                            \
+    if (x != CL_SUCCESS)                                                       \
+    {                                                                          \
+        log_error("ERROR: " __VA_ARGS__);                                      \
+        log_error("\n");                                                       \
+        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);   \
+        return x;                                                              \
     }
 
-#define RETURN_ON_CL_ERROR(x, cl_func_name) \
-    if(x != CL_SUCCESS) \
-    { \
-        log_error("ERROR: %s failed: %s (%d)\n", cl_func_name, get_cl_error_string(x).c_str(), x);\
-        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);\
-        return x;\
+#define RETURN_ON_CL_ERROR(x, cl_func_name)                                    \
+    if (x != CL_SUCCESS)                                                       \
+    {                                                                          \
+        log_error("ERROR: %s failed: %s (%d)\n", cl_func_name,                 \
+                  get_cl_error_string(x).c_str(), x);                          \
+        log_error("ERROR: %d, file: %s, line: %d\n", x, __FILE__, __LINE__);   \
+        return x;                                                              \
     }
 
 #endif // TEST_CONFORMANCE_CLCPP_UTILS_TEST_ERRORS_HPP

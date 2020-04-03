@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,26 +21,24 @@
 // is_vector_type<Type>::value is true if Type is an OpenCL
 // vector type; otherwise - false.
 //
-// Examples: 
+// Examples:
 // * is_vector_type<cl_float>::value == false
 // * is_vector_type<cl_float4>::value == true
-template<class Type>
-struct is_vector_type
+template <class Type> struct is_vector_type
 {
     const static bool value = false;
 };
 
-#define ADD_VECTOR_TYPE(Type, n) \
-    template<> \
-    struct is_vector_type<Type ## n> \
-    { \
-        const static bool value = true; \
+#define ADD_VECTOR_TYPE(Type, n)                                               \
+    template <> struct is_vector_type<Type##n>                                 \
+    {                                                                          \
+        const static bool value = true;                                        \
     };
 
-#define ADD_VECTOR_TYPES(Type) \
-    ADD_VECTOR_TYPE(Type, 2) \
-    ADD_VECTOR_TYPE(Type, 4) \
-    ADD_VECTOR_TYPE(Type, 8) \
+#define ADD_VECTOR_TYPES(Type)                                                 \
+    ADD_VECTOR_TYPE(Type, 2)                                                   \
+    ADD_VECTOR_TYPE(Type, 4)                                                   \
+    ADD_VECTOR_TYPE(Type, 8)                                                   \
     ADD_VECTOR_TYPE(Type, 16)
 
 ADD_VECTOR_TYPES(cl_char)

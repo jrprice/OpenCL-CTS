@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,42 +19,46 @@
 #include <unistd.h>
 #endif
 
-int IsAPowerOfTwo( unsigned long x )
+int IsAPowerOfTwo(unsigned long x) { return 0 == (x & (x - 1)); }
+
+
+int test_min_data_type_align_size_alignment(cl_device_id device,
+                                            cl_context context,
+                                            cl_command_queue queue, int n_elems)
 {
-  return 0 == (x & (x-1));
-}
+    cl_uint min_alignment;
 
+    if (gHasLong)
+        min_alignment = sizeof(cl_long) * 16;
+    else
+        min_alignment = sizeof(cl_int) * 16;
 
-int test_min_data_type_align_size_alignment(cl_device_id device, cl_context context, cl_command_queue queue, int n_elems )
-{
-  cl_uint min_alignment;
+    int error = 0;
+    cl_uint alignment;
 
-  if (gHasLong)
-    min_alignment = sizeof(cl_long)*16;
-  else
-    min_alignment = sizeof(cl_int)*16;
+    error = clGetDeviceInfo(device, CL_DEVICE_MEM_BASE_ADDR_ALIGN,
+                            sizeof(alignment), &alignment, NULL);
+    test_error(error,
+               "clGetDeviceInfo for CL_DEVICE_MEM_BASE_ADDR_ALIGN failed");
+    log_info("Device reported CL_DEVICE_MEM_BASE_ADDR_ALIGN = %lu bits.\n",
+             (unsigned long)alignment);
 
-  int error = 0;
-  cl_uint alignment;
+    // Verify the size is large enough
+    if (alignment < min_alignment * 8)
+    {
+        log_error("ERROR: alignment too small. Minimum alignment for %s16 is "
+                  "%lu bits, device reported %lu bits.",
+                  (gHasLong) ? "long" : "int",
+                  (unsigned long)(min_alignment * 8), (unsigned long)alignment);
+        return -1;
+    }
 
-  error = clGetDeviceInfo(device, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(alignment), &alignment, NULL);
-  test_error(error, "clGetDeviceInfo for CL_DEVICE_MEM_BASE_ADDR_ALIGN failed");
-  log_info("Device reported CL_DEVICE_MEM_BASE_ADDR_ALIGN = %lu bits.\n", (unsigned long)alignment);
+    // Verify the size is a power of two
+    if (!IsAPowerOfTwo((unsigned long)alignment))
+    {
+        log_error("ERROR: alignment is not a power of two.\n");
+        return -1;
+    }
 
-  // Verify the size is large enough
-  if (alignment < min_alignment*8) {
-    log_error("ERROR: alignment too small. Minimum alignment for %s16 is %lu bits, device reported %lu bits.",
-              (gHasLong) ? "long" : "int",
-              (unsigned long)(min_alignment*8), (unsigned long)alignment);
-    return -1;
-  }
-
-  // Verify the size is a power of two
-  if (!IsAPowerOfTwo((unsigned long)alignment)) {
-    log_error("ERROR: alignment is not a power of two.\n");
-    return -1;
-  }
-
-  return 0;
-
+    return 0;
 }

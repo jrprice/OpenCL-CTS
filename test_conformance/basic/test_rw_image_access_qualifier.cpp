@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 #include "procs.h"
 #include "harness/clImageHelper.h"
 
-static const char* rw_kernel_code =
+static const char *rw_kernel_code =
 "kernel void test_rw_images(read_write image2d_t src_image) {\n"
 "  int tid_x = get_global_id(0);\n"
 "  int tid_y = get_global_id(1);\n"
@@ -41,7 +41,8 @@ static const char* rw_kernel_code =
 "}\n";
 
 
-int test_rw_image_access_qualifier(cl_device_id device_id, cl_context context, cl_command_queue commands, int num_elements)
+int test_rw_image_access_qualifier(cl_device_id device_id, cl_context context,
+                                   cl_command_queue commands, int num_elements)
 {
 
     unsigned int i;
@@ -67,29 +68,35 @@ int test_rw_image_access_qualifier(cl_device_id device_id, cl_context context, c
     size_y = 4;
     size = size_x * size_y * 4;
 
-    input = (unsigned int *)malloc(size*sizeof(unsigned int));
-    output = (unsigned int *)malloc(size*sizeof(unsigned int));
+    input = (unsigned int *)malloc(size * sizeof(unsigned int));
+    output = (unsigned int *)malloc(size * sizeof(unsigned int));
 
-    if (!input && !output) {
+    if (!input && !output)
+    {
         log_error("Error: memory allocation failed\n");
-    return -1;
+        return -1;
     }
 
     /* Fill input array with random values */
-    for (i = 0; i < size; i++) {
-        input[i] = (unsigned int)(rand()/((double)RAND_MAX + 1)*255);
+    for (i = 0; i < size; i++)
+    {
+        input[i] = (unsigned int)(rand() / ((double)RAND_MAX + 1) * 255);
     }
 
     /* Zero out output array */
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < size; i++)
+    {
         output[i] = 0.0f;
     }
 
     /* Build the program executable */
-  err = create_single_kernel_helper_with_build_options(context,&program,&kernel,1,&rw_kernel_code,"test_rw_images", "-cl-std=CL2.0");
-    if (err != CL_SUCCESS || !program) {
+    err = create_single_kernel_helper_with_build_options(
+    context, &program, &kernel, 1, &rw_kernel_code, "test_rw_images",
+    "-cl-std=CL2.0");
+    if (err != CL_SUCCESS || !program)
+    {
         log_error("Error: clCreateProgramWithSource failed\n");
-    return err;
+        return err;
     }
 
     /* Create arrays for input and output data */
@@ -97,22 +104,22 @@ int test_rw_image_access_qualifier(cl_device_id device_id, cl_context context, c
     format.image_channel_data_type = CL_UNSIGNED_INT32;
 
     /* Create input image */
-    flags = (cl_mem_flags) (CL_MEM_READ_WRITE
-                            | CL_MEM_COPY_HOST_PTR);
-    src_image = create_image_2d(context, flags, &format,
-                                size_x, size_y, 0,
+    flags = (cl_mem_flags)(CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR);
+    src_image = create_image_2d(context, flags, &format, size_x, size_y, 0,
                                 (void *)input, &err);
-    if (err != CL_SUCCESS || !src_image) {
+    if (err != CL_SUCCESS || !src_image)
+    {
         log_error("Error: clCreateImage2D failed\n");
         return err;
     }
 
     /* Set kernel arguments */
-  err = clSetKernelArg(kernel, 0, sizeof(src_image), &src_image);
-  if (err != CL_SUCCESS) {
-    log_error("Error: clSetKernelArg failed\n");
-    return err;
-  }
+    err = clSetKernelArg(kernel, 0, sizeof(src_image), &src_image);
+    if (err != CL_SUCCESS)
+    {
+        log_error("Error: clSetKernelArg failed\n");
+        return err;
+    }
 
     /* Set kernel execution parameters */
     int dim_count = 2;
@@ -128,38 +135,41 @@ int test_rw_image_access_qualifier(cl_device_id device_id, cl_context context, c
     /* Execute kernel */
     err = CL_SUCCESS;
     unsigned int num_iter = 1;
-    for(i = 0; i < num_iter; i++) {
-        err |= clEnqueueNDRangeKernel(commands, kernel, dim_count,
-                                      NULL, global_dim, local_dim,
-                                      0, NULL, NULL);
+    for (i = 0; i < num_iter; i++)
+    {
+        err |= clEnqueueNDRangeKernel(commands, kernel, dim_count, NULL,
+                                      global_dim, local_dim, 0, NULL, NULL);
     }
 
     /* Read back the results from the device to verify the output */
-    const size_t origin[3] = {0, 0, 0};
-    const size_t region[3] = {size_x, size_y, 1};
-    err |= clEnqueueReadImage(commands, src_image, CL_TRUE, origin, region, 0, 0,
-                              output, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
+    const size_t origin[3] = { 0, 0, 0 };
+    const size_t region[3] = { size_x, size_y, 1 };
+    err |= clEnqueueReadImage(commands, src_image, CL_TRUE, origin, region, 0,
+                              0, output, 0, NULL, NULL);
+    if (err != CL_SUCCESS)
+    {
         log_error("Error: clEnqueueReadBuffer failed\n");
-    return err;
+        return err;
     }
 
     /* Verify the correctness of kernel result */
-  err = 0;
-    for (i = 0; i < size; i++) {
-        if (output[i] != (input[i] + 3)) {
-      log_error("Error: mismatch at index %d\n", i);
+    err = 0;
+    for (i = 0; i < size; i++)
+    {
+        if (output[i] != (input[i] + 3))
+        {
+            log_error("Error: mismatch at index %d\n", i);
             err++;
             break;
         }
     }
 
-  /* Release programs, kernel, contect, and memory objects */
+    /* Release programs, kernel, contect, and memory objects */
     clReleaseMemObject(src_image);
     clReleaseProgram(program);
     clReleaseKernel(kernel);
 
-  /* Deallocate arrays */
+    /* Deallocate arrays */
     free(input);
     free(output);
 

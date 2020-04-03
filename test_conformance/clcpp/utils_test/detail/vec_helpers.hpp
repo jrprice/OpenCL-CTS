@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,76 +25,73 @@
 
 #include "../../common.hpp"
 
-namespace detail
-{
+namespace detail {
 
-template<class T>
-T make_value(typename scalar_type<T>::type x, typename std::enable_if<is_vector_type<T>::value>::type* = 0)
+template <class T>
+T make_value(typename scalar_type<T>::type x,
+             typename std::enable_if<is_vector_type<T>::value>::type* = 0)
 {
     T value;
-    for(size_t i = 0; i < vector_size<T>::value; i++)
+    for (size_t i = 0; i < vector_size<T>::value; i++)
     {
         value.s[i] = x;
     }
     return value;
 }
 
-template<class T>
+template <class T>
 T make_value(T x, typename std::enable_if<!is_vector_type<T>::value>::type* = 0)
 {
     return x;
 }
 
-template<class result_type, class IN1, class IN2>
-result_type multiply(const IN1& x, const IN2& y, typename std::enable_if<is_vector_type<result_type>::value>::type* = 0)
+template <class result_type, class IN1, class IN2>
+result_type
+multiply(const IN1& x, const IN2& y,
+         typename std::enable_if<is_vector_type<result_type>::value>::type* = 0)
 {
     static_assert(
-        (vector_size<IN1>::value == vector_size<IN2>::value)
-            && (vector_size<IN2>::value == vector_size<result_type>::value),
-        "Vector sizes must be the same."
-    );
+    (vector_size<IN1>::value == vector_size<IN2>::value)
+    && (vector_size<IN2>::value == vector_size<result_type>::value),
+    "Vector sizes must be the same.");
     typedef typename scalar_type<result_type>::type SCALAR;
     result_type value;
-    for(size_t i = 0; i < vector_size<result_type>::value; i++)
+    for (size_t i = 0; i < vector_size<result_type>::value; i++)
     {
         value.s[i] = static_cast<SCALAR>(x.s[i]) * static_cast<SCALAR>(y.s[i]);
     }
     return value;
 }
 
-template<class result_type, class IN1, class IN2>
-result_type multiply(const IN1& x, const IN2& y, typename std::enable_if<!is_vector_type<result_type>::value>::type* = 0)
+template <class result_type, class IN1, class IN2>
+result_type multiply(
+const IN1& x, const IN2& y,
+typename std::enable_if<!is_vector_type<result_type>::value>::type* = 0)
 {
-    static_assert(
-        !is_vector_type<IN1>::value && !is_vector_type<IN2>::value,
-        "IN1 and IN2 must be scalar types"
-    );
+    static_assert(!is_vector_type<IN1>::value && !is_vector_type<IN2>::value,
+                  "IN1 and IN2 must be scalar types");
     return static_cast<result_type>(x) * static_cast<result_type>(y);
 }
 
-template<class T>
-T get_min()
+template <class T> T get_min()
 {
     typedef typename scalar_type<T>::type SCALAR;
     return make_value<T>((std::numeric_limits<SCALAR>::min)());
 }
 
-template<class T>
-T get_max()
+template <class T> T get_max()
 {
     typedef typename scalar_type<T>::type SCALAR;
     return make_value<T>((std::numeric_limits<SCALAR>::max)());
 }
 
-template<class T>
-T get_part_max(typename scalar_type<T>::type x)
+template <class T> T get_part_max(typename scalar_type<T>::type x)
 {
     typedef typename scalar_type<T>::type SCALAR;
     return make_value<T>((std::numeric_limits<SCALAR>::max)() / x);
 }
 
-template<class T>
-T def_limit(typename scalar_type<T>::type x)
+template <class T> T def_limit(typename scalar_type<T>::type x)
 {
     return make_value<T>(x);
 }

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -63,7 +63,8 @@ struct output_type
 )";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
 std::string generate_source(test_options options)
@@ -503,7 +504,8 @@ std::string generate_source(test_options options)
 }
 #endif
 
-int test(cl_device_id device, cl_context context, cl_command_queue queue, test_options options)
+int test(cl_device_id device, cl_context context, cl_command_queue queue,
+         test_options options)
 {
     int error = CL_SUCCESS;
 
@@ -514,92 +516,94 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
     std::string source = generate_source(options);
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 // Only OpenCL C++ to SPIR-V compilation
 #if defined(DEVELOPMENT) && defined(ONLY_SPIRV_COMPILATION)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
     return error;
 // Use OpenCL C kernels instead of OpenCL C++ kernels (test C++ host code)
 #elif defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name, "-cl-std=CL2.0", false
-    );
+    error = create_opencl_kernel(context, &program, &kernel, source,
+                                 kernel_name, "-cl-std=CL2.0", false);
     RETURN_ON_ERROR(error)
 // Normal run
 #else
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
 #endif
 
     cl_uint max_queues;
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_ON_DEVICE_QUEUES, sizeof(cl_uint), &max_queues, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_MAX_ON_DEVICE_QUEUES,
+                            sizeof(cl_uint), &max_queues, NULL);
     RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
     cl_uint max_events;
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_ON_DEVICE_EVENTS, sizeof(cl_uint), &max_events, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_MAX_ON_DEVICE_EVENTS,
+                            sizeof(cl_uint), &max_events, NULL);
     RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
     cl_command_queue device_queue1 = NULL;
     cl_command_queue device_queue2 = NULL;
 
-    cl_queue_properties queue_properties1[] =
-    {
-        CL_QUEUE_PROPERTIES, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_ON_DEVICE | CL_QUEUE_ON_DEVICE_DEFAULT,
+    cl_queue_properties queue_properties1[] = {
+        CL_QUEUE_PROPERTIES,
+        CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_ON_DEVICE
+        | CL_QUEUE_ON_DEVICE_DEFAULT,
         0
     };
-    device_queue1 = clCreateCommandQueueWithProperties(context, device, queue_properties1, &error);
+    device_queue1 = clCreateCommandQueueWithProperties(
+    context, device, queue_properties1, &error);
     RETURN_ON_CL_ERROR(error, "clCreateCommandQueueWithProperties")
 
     if (max_queues > 1)
     {
-        cl_queue_properties queue_properties2[] =
-        {
-            CL_QUEUE_PROPERTIES, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_ON_DEVICE,
-            0
+        cl_queue_properties queue_properties2[] = {
+            CL_QUEUE_PROPERTIES,
+            CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_ON_DEVICE, 0
         };
-        device_queue2 = clCreateCommandQueueWithProperties(context, device, queue_properties2, &error);
+        device_queue2 = clCreateCommandQueueWithProperties(
+        context, device, queue_properties2, &error);
         RETURN_ON_CL_ERROR(error, "clCreateCommandQueueWithProperties")
     }
 
     cl_mem output_buffer;
-    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(output_type), NULL, &error);
+    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                   sizeof(output_type), NULL, &error);
     RETURN_ON_CL_ERROR(error, "clCreateBuffer")
 
-    error = clSetKernelArg(kernel, 0, sizeof(cl_command_queue), device_queue2 != NULL ? &device_queue2 : &device_queue1);
+    error =
+    clSetKernelArg(kernel, 0, sizeof(cl_command_queue),
+                   device_queue2 != NULL ? &device_queue2 : &device_queue1);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
     error = clSetKernelArg(kernel, 1, sizeof(output_buffer), &output_buffer);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
 
     const char pattern = 0;
-    error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern), 0, sizeof(output_type), 0, NULL, NULL);
+    error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern),
+                                0, sizeof(output_type), 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueFillBuffer")
 
     size_t max_work_group_size;
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &max_work_group_size, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                            sizeof(size_t), &max_work_group_size, NULL);
     RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
     const size_t local_size = (std::min)((size_t)256, max_work_group_size);
     const size_t global_size = 10000 / local_size * local_size;
     const size_t count = global_size;
-    error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, &local_size, 0, NULL, NULL);
+    error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size,
+                                   &local_size, 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
     output_type output;
-    error = clEnqueueReadBuffer(
-        queue, output_buffer, CL_TRUE,
-        0, sizeof(output_type),
-        static_cast<void *>(&output),
-        0, NULL, NULL
-    );
+    error =
+    clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, sizeof(output_type),
+                        static_cast<void *>(&output), 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueReadBuffer")
 
     if (!output.enqueue_kernel1_success)
@@ -646,24 +650,23 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 
         if (result != expected)
         {
-            RETURN_ON_ERROR_MSG(-1,
-                "kernel did not return correct value. Expected: %s, got: %s",
-                format_value(expected).c_str(), format_value(result).c_str()
-            )
+            RETURN_ON_ERROR_MSG(
+            -1, "kernel did not return correct value. Expected: %s, got: %s",
+            format_value(expected).c_str(), format_value(result).c_str())
         }
     }
 
     clReleaseMemObject(output_buffer);
     clReleaseCommandQueue(device_queue1);
-    if (device_queue2 != NULL)
-        clReleaseCommandQueue(device_queue2);
+    if (device_queue2 != NULL) clReleaseCommandQueue(device_queue2);
     clReleaseKernel(kernel);
     clReleaseProgram(program);
     return error;
 }
 
 AUTO_TEST_CASE(test_enqueue_one_kernel)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.test = 0;
@@ -671,7 +674,8 @@ AUTO_TEST_CASE(test_enqueue_one_kernel)
 }
 
 AUTO_TEST_CASE(test_enqueue_two_kernels)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.test = 1;
@@ -679,7 +683,8 @@ AUTO_TEST_CASE(test_enqueue_two_kernels)
 }
 
 AUTO_TEST_CASE(test_enqueue_user_events_and_locals)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.test = 2;
@@ -687,7 +692,8 @@ AUTO_TEST_CASE(test_enqueue_user_events_and_locals)
 }
 
 AUTO_TEST_CASE(test_enqueue_marker)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.test = 3;

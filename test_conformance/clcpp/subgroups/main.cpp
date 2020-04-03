@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,8 +22,9 @@
 #include "test_sg_scan_inclusive.hpp"
 #include "test_sg_scan_exclusive.hpp"
 
-int main(int argc, const char *argv[])
+int main(int argc, const char* argv[])
 {
     auto& tests = autotest::test_suite::global_test_suite().test_defs;
-    return runTestHarness(argc, argv, tests.size(), tests.data(), false, false, 0);
+    return runTestHarness(argc, argv, tests.size(), tests.data(), false, false,
+                          0);
 }

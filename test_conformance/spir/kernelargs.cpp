@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,8 +17,10 @@
 #include "kernelargs.h"
 #include "datagen.h"
 
-KernelArg* KernelArg::clone(cl_context ctx, const WorkSizeInfo& ws, const cl_kernel kernel, const cl_device_id device) const
+KernelArg* KernelArg::clone(cl_context ctx, const WorkSizeInfo& ws,
+                            const cl_kernel kernel,
+                            const cl_device_id device) const
 {
-    return DataGenerator::getInstance()->generateKernelArg(ctx, m_argInfo, ws,
-                                                           this, kernel, device);
+    return DataGenerator::getInstance()->generateKernelArg(
+    ctx, m_argInfo, ws, this, kernel, device);
 }

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,22 +20,21 @@
 #include <vector>
 #include <limits>
 
-enum class work_group_op : int {
-    add, min, max
+enum class work_group_op : int
+{
+    add,
+    min,
+    max
 };
 
 std::string to_string(work_group_op op)
 {
     switch (op)
     {
-        case work_group_op::add:
-            return "add";
-        case work_group_op::min:
-            return "min";
-        case work_group_op::max:
-            return "max";
-        default:
-            break;
+        case work_group_op::add: return "add";
+        case work_group_op::min: return "min";
+        case work_group_op::max: return "max";
+        default: break;
     }
     return "";
 }
@@ -46,35 +45,32 @@ std::vector<CL_INT_TYPE> generate_input(size_t count, size_t wg_size)
     std::vector<CL_INT_TYPE> input(count, CL_INT_TYPE(1));
     switch (op)
     {
-        case work_group_op::add:
-            return input;
-        case work_group_op::min:
+        case work_group_op::add: return input;
+        case work_group_op::min: {
+            size_t j = wg_size;
+            for (size_t i = 0; i < count; i++)
             {
-                size_t j = wg_size;
-                for(size_t i = 0; i < count; i++)
+                input[i] = static_cast<CL_INT_TYPE>(j);
+                j--;
+                if (j == 0)
                 {
-                    input[i] = static_cast<CL_INT_TYPE>(j);
-                    j--;
-                    if(j == 0)
-                    {
-                        j = wg_size;
-                    }
+                    j = wg_size;
                 }
             }
-            break;
-        case work_group_op::max:
+        }
+        break;
+        case work_group_op::max: {
+            size_t j = 0;
+            for (size_t i = 0; i < count; i++)
             {
-                size_t j = 0;
-                for(size_t i = 0; i < count; i++)
+                input[i] = static_cast<CL_INT_TYPE>(j);
+                j++;
+                if (j == wg_size)
                 {
-                    input[i] = static_cast<CL_INT_TYPE>(j);
-                    j++;
-                    if(j == wg_size)
-                    {
-                        j = 0;
-                    }
+                    j = 0;
                 }
             }
+        }
     }
     return input;
 }
@@ -87,9 +83,11 @@ std::vector<CL_INT_TYPE> generate_output(size_t count, size_t wg_size)
         case work_group_op::add:
             return std::vector<CL_INT_TYPE>(count, CL_INT_TYPE(0));
         case work_group_op::min:
-            return std::vector<CL_INT_TYPE>(count, (std::numeric_limits<CL_INT_TYPE>::max)());
+            return std::vector<CL_INT_TYPE>(
+            count, (std::numeric_limits<CL_INT_TYPE>::max)());
         case work_group_op::max:
-            return std::vector<CL_INT_TYPE>(count, (std::numeric_limits<CL_INT_TYPE>::min)());
+            return std::vector<CL_INT_TYPE>(
+            count, (std::numeric_limits<CL_INT_TYPE>::min)());
     }
     return std::vector<CL_INT_TYPE>(count, CL_INT_TYPE(0));
 }

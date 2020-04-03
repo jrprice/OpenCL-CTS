@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -58,7 +58,8 @@ const std::string source_common = R"(
 )";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
 std::string generate_source(test_options options)
@@ -190,14 +191,16 @@ std::string generate_source(test_options options)
 }
 #endif
 
-int test(cl_device_id device, cl_context context, cl_command_queue queue, test_options options)
+int test(cl_device_id device, cl_context context, cl_command_queue queue,
+         test_options options)
 {
     int error = CL_SUCCESS;
 
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
     if (!is_extension_available(device, "cl_khr_subgroups"))
     {
-        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. Skipping tests.\n");
+        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. "
+                 "Skipping tests.\n");
         return CL_SUCCESS;
     }
 #endif
@@ -209,53 +212,58 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
     std::string source = generate_source(options);
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 // Only OpenCL C++ to SPIR-V compilation
 #if defined(DEVELOPMENT) && defined(ONLY_SPIRV_COMPILATION)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
     return error;
 // Use OpenCL C kernels instead of OpenCL C++ kernels (test C++ host code)
 #elif defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name, "-cl-std=CL2.0", false
-    );
+    error = create_opencl_kernel(context, &program, &kernel, source,
+                                 kernel_name, "-cl-std=CL2.0", false);
     RETURN_ON_ERROR(error)
 // Normal run
 #else
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
 #endif
 
     size_t max_work_group_size;
-    error = clGetKernelWorkGroupInfo(kernel, device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL);
+    error = clGetKernelWorkGroupInfo(kernel, device, CL_KERNEL_WORK_GROUP_SIZE,
+                                     sizeof(max_work_group_size),
+                                     &max_work_group_size, NULL);
     RETURN_ON_CL_ERROR(error, "clGetKernelWorkGroupInfo")
 
     if (options.barrier == barrier_type::local)
     {
         cl_ulong kernel_local_mem_size;
-        error = clGetKernelWorkGroupInfo(kernel, device, CL_KERNEL_LOCAL_MEM_SIZE, sizeof(kernel_local_mem_size), &kernel_local_mem_size, NULL);
+        error = clGetKernelWorkGroupInfo(
+        kernel, device, CL_KERNEL_LOCAL_MEM_SIZE, sizeof(kernel_local_mem_size),
+        &kernel_local_mem_size, NULL);
         RETURN_ON_CL_ERROR(error, "clGetKernelWorkGroupInfo")
 
         cl_ulong device_local_mem_size;
-        error = clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(device_local_mem_size), &device_local_mem_size, NULL);
+        error = clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_SIZE,
+                                sizeof(device_local_mem_size),
+                                &device_local_mem_size, NULL);
         RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
-        max_work_group_size = (std::min<cl_ulong>)(max_work_group_size, (device_local_mem_size - kernel_local_mem_size) / sizeof(cl_long));
+        max_work_group_size =
+        (std::min<cl_ulong>)(max_work_group_size,
+                             (device_local_mem_size - kernel_local_mem_size)
+                             / sizeof(cl_long));
     }
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<size_t> global_size_dis(1, options.max_count);
-    std::uniform_int_distribution<size_t> local_size_dis(1, max_work_group_size);
+    std::uniform_int_distribution<size_t> local_size_dis(1,
+                                                         max_work_group_size);
     std::uniform_int_distribution<int> iter_dis(0, 20);
 
     for (size_t test = 0; test < options.num_tests; test++)
@@ -267,31 +275,32 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
         const int iter_lo = -iter_dis(gen);
         const int iter_hi = +iter_dis(gen);
 
-        cl_mem output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_long) * count, NULL, &error);
+        cl_mem output_buffer = clCreateBuffer(
+        context, CL_MEM_READ_WRITE, sizeof(cl_long) * count, NULL, &error);
         RETURN_ON_CL_ERROR(error, "clCreateBuffer")
 
         error = clSetKernelArg(kernel, 0, sizeof(iter_lo), &iter_lo);
         RETURN_ON_CL_ERROR(error, "clSetKernelArg")
         error = clSetKernelArg(kernel, 1, sizeof(iter_hi), &iter_hi);
         RETURN_ON_CL_ERROR(error, "clSetKernelArg")
-        error = clSetKernelArg(kernel, 2, sizeof(output_buffer), &output_buffer);
+        error =
+        clSetKernelArg(kernel, 2, sizeof(output_buffer), &output_buffer);
         RETURN_ON_CL_ERROR(error, "clSetKernelArg")
         if (options.barrier == barrier_type::local)
         {
-            error = clSetKernelArg(kernel, 3, sizeof(cl_long) * local_size, NULL);
+            error =
+            clSetKernelArg(kernel, 3, sizeof(cl_long) * local_size, NULL);
             RETURN_ON_CL_ERROR(error, "clSetKernelArg")
         }
 
-        error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, &local_size, 0, NULL, NULL);
+        error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size,
+                                       &local_size, 0, NULL, NULL);
         RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
         std::vector<cl_long> output(count);
         error = clEnqueueReadBuffer(
-            queue, output_buffer, CL_TRUE,
-            0, sizeof(cl_long) * count,
-            static_cast<void *>(output.data()),
-            0, NULL, NULL
-        );
+        queue, output_buffer, CL_TRUE, 0, sizeof(cl_long) * count,
+        static_cast<void *>(output.data()), 0, NULL, NULL);
         RETURN_ON_CL_ERROR(error, "clEnqueueReadBuffer")
 
         error = clReleaseMemObject(output_buffer);
@@ -304,10 +313,9 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 
             if (value != expected)
             {
-                RETURN_ON_ERROR_MSG(-1,
-                    "Element %lu has incorrect value. Expected: %ld, got: %ld",
-                    gid, expected, value
-                );
+                RETURN_ON_ERROR_MSG(
+                -1, "Element %lu has incorrect value. Expected: %ld, got: %ld",
+                gid, expected, value);
             }
         }
     }
@@ -318,7 +326,8 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 }
 
 AUTO_TEST_CASE(test_sub_group_barrier_global)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.barrier = barrier_type::global;
@@ -328,7 +337,8 @@ AUTO_TEST_CASE(test_sub_group_barrier_global)
 }
 
 AUTO_TEST_CASE(test_sub_group_barrier_local)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.barrier = barrier_type::local;

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,20 +26,20 @@
 #endif
 
 test_definition test_list[] = {
-    ADD_TEST( partition_equally ),
-    ADD_TEST( partition_by_counts ),
-    ADD_TEST( partition_by_affinity_domain_numa ),
-    ADD_TEST( partition_by_affinity_domain_l4_cache ),
-    ADD_TEST( partition_by_affinity_domain_l3_cache ),
-    ADD_TEST( partition_by_affinity_domain_l2_cache ),
-    ADD_TEST( partition_by_affinity_domain_l1_cache ),
-    ADD_TEST( partition_by_affinity_domain_next_partitionable ),
-    ADD_TEST( partition_all ),
+    ADD_TEST(partition_equally),
+    ADD_TEST(partition_by_counts),
+    ADD_TEST(partition_by_affinity_domain_numa),
+    ADD_TEST(partition_by_affinity_domain_l4_cache),
+    ADD_TEST(partition_by_affinity_domain_l3_cache),
+    ADD_TEST(partition_by_affinity_domain_l2_cache),
+    ADD_TEST(partition_by_affinity_domain_l1_cache),
+    ADD_TEST(partition_by_affinity_domain_next_partitionable),
+    ADD_TEST(partition_all),
 };
 
-const int test_num = ARRAY_SIZE( test_list );
+const int test_num = ARRAY_SIZE(test_list);
 
 int main(int argc, const char *argv[])
 {
-    return runTestHarness( argc, argv, test_num, test_list, false, true, 0 );
+    return runTestHarness(argc, argv, test_num, test_list, false, true, 0);
 }

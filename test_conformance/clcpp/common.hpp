@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -45,7 +45,9 @@
 
 size_t get_uniform_global_size(size_t global_size, size_t local_size)
 {
-    return static_cast<size_t>(std::ceil(static_cast<double>(global_size) / local_size)) * local_size;
+    return static_cast<size_t>(
+           std::ceil(static_cast<double>(global_size) / local_size))
+    * local_size;
 }
 
 #endif // TEST_CONFORMANCE_CLCPP_COMMON_INC_HPP

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,22 +19,32 @@
 extern "C" {
 #endif
 
-extern int test_device_info(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_device_queue(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_execute_block(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_block(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_nested_blocks(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_wg_size(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_flags(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_multi_queue(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_host_multi_queue(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_enqueue_ndrange(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
-extern int test_host_queue_order(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
+extern int test_device_info(cl_device_id device, cl_context context,
+                            cl_command_queue queue, int num_elements);
+extern int test_device_queue(cl_device_id device, cl_context context,
+                             cl_command_queue queue, int num_elements);
+extern int test_execute_block(cl_device_id device, cl_context context,
+                              cl_command_queue queue, int num_elements);
+extern int test_enqueue_block(cl_device_id device, cl_context context,
+                              cl_command_queue queue, int num_elements);
+extern int test_enqueue_nested_blocks(cl_device_id device, cl_context context,
+                                      cl_command_queue queue, int num_elements);
+extern int test_enqueue_wg_size(cl_device_id device, cl_context context,
+                                cl_command_queue queue, int num_elements);
+extern int test_enqueue_flags(cl_device_id device, cl_context context,
+                              cl_command_queue queue, int num_elements);
+extern int test_enqueue_multi_queue(cl_device_id device, cl_context context,
+                                    cl_command_queue queue, int num_elements);
+extern int test_host_multi_queue(cl_device_id device, cl_context context,
+                                 cl_command_queue queue, int num_elements);
+extern int test_enqueue_ndrange(cl_device_id device, cl_context context,
+                                cl_command_queue queue, int num_elements);
+extern int test_host_queue_order(cl_device_id device, cl_context context,
+                                 cl_command_queue queue, int num_elements);
 
-extern int test_execution_stress(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements);
+extern int test_execution_stress(cl_device_id device, cl_context context,
+                                 cl_command_queue queue, int num_elements);
 
 #ifdef __cplusplus
 }
 #endif
-
-

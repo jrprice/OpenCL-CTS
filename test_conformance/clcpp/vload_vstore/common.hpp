@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,16 +25,15 @@
 #include "half_utils.hpp"
 
 // Generates cl_half input
-std::vector<cl_half> generate_half_input(size_t count,
-                                         const cl_float& min,
-                                         const cl_float& max,
-                                         const std::vector<cl_half> special_cases)
+std::vector<cl_half>
+generate_half_input(size_t count, const cl_float& min, const cl_float& max,
+                    const std::vector<cl_half> special_cases)
 {
     std::vector<cl_half> input(count);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<cl_float> dis(min, max);
-    for(auto& i : input)
+    for (auto& i : input)
     {
         i = float2half_rte(dis(gen));
     }
@@ -45,35 +44,29 @@ std::vector<cl_half> generate_half_input(size_t count,
 }
 
 // Generates input for vload_vstore tests, we can't just simply use function
-// generate_input<type>(...), because cl_half is typedef of cl_short (but generating
-// cl_shorts and generating cl_halfs are different operations).
+// generate_input<type>(...), because cl_half is typedef of cl_short (but
+// generating cl_shorts and generating cl_halfs are different operations).
 template <class type>
-std::vector<type> vload_vstore_generate_input(size_t count,
-                                              const type& min,
-                                              const type& max, 
-                                              const std::vector<type> special_cases,
-                                              const bool generate_half,
-                                              typename std::enable_if<
-                                                  std::is_same<type, cl_half>::value
-                                              >::type* = 0)
+std::vector<type> vload_vstore_generate_input(
+size_t count, const type& min, const type& max,
+const std::vector<type> special_cases, const bool generate_half,
+typename std::enable_if<std::is_same<type, cl_half>::value>::type* = 0)
 {
-    if(!generate_half)
+    if (!generate_half)
     {
         return generate_input<type>(count, min, max, special_cases);
     }
-    return generate_half_input(count, -(CL_HALF_MAX/4.f), (CL_HALF_MAX/4.f), special_cases);
+    return generate_half_input(count, -(CL_HALF_MAX / 4.f), (CL_HALF_MAX / 4.f),
+                               special_cases);
 }
 
-// If !std::is_same<type, cl_half>::value, we can just use generate_input<type>(...).
+// If !std::is_same<type, cl_half>::value, we can just use
+// generate_input<type>(...).
 template <class type>
-std::vector<type> vload_vstore_generate_input(size_t count,
-                                              const type& min,
-                                              const type& max, 
-                                              const std::vector<type> special_cases,
-                                              const bool generate_half,
-                                              typename std::enable_if<
-                                                  !std::is_same<type, cl_half>::value
-                                              >::type* = 0)
+std::vector<type> vload_vstore_generate_input(
+size_t count, const type& min, const type& max,
+const std::vector<type> special_cases, const bool generate_half,
+typename std::enable_if<!std::is_same<type, cl_half>::value>::type* = 0)
 {
     return generate_input<type>(count, min, max, special_cases);
 }

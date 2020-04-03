@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,21 +26,20 @@
 #endif
 
 test_definition test_list[] = {
-    ADD_TEST( context_multiple_contexts_same_device ),
-    ADD_TEST( context_two_contexts_same_device ),
-    ADD_TEST( context_three_contexts_same_device ),
-    ADD_TEST( context_four_contexts_same_device ),
+    ADD_TEST(context_multiple_contexts_same_device),
+    ADD_TEST(context_two_contexts_same_device),
+    ADD_TEST(context_three_contexts_same_device),
+    ADD_TEST(context_four_contexts_same_device),
 
-    ADD_TEST( two_devices ),
-    ADD_TEST( max_devices ),
+    ADD_TEST(two_devices),
+    ADD_TEST(max_devices),
 
-    ADD_TEST( hundred_queues ),
+    ADD_TEST(hundred_queues),
 };
 
-const int test_num = ARRAY_SIZE( test_list );
+const int test_num = ARRAY_SIZE(test_list);
 
 int main(int argc, const char *argv[])
 {
-    return runTestHarness( argc, argv, test_num, test_list, false, true, 0 );
+    return runTestHarness(argc, argv, test_num, test_list, false, true, 0);
 }
-

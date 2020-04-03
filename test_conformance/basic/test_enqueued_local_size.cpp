@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -45,11 +45,10 @@ static const char *enqueued_local_size_1d_code =
 "}\n";
 
 
-static int
-verify_enqueued_local_size(int *result, size_t *expected, int n)
+static int verify_enqueued_local_size(int *result, size_t *expected, int n)
 {
     int i;
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         if (result[i] != (int)expected[i])
         {
@@ -62,8 +61,8 @@ verify_enqueued_local_size(int *result, size_t *expected, int n)
 }
 
 
-int
-test_enqueued_local_size(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+int test_enqueued_local_size(cl_device_id device, cl_context context,
+                             cl_command_queue queue, int num_elements)
 {
     cl_mem streams;
     cl_program program[2];
@@ -74,46 +73,56 @@ test_enqueued_local_size(cl_device_id device, cl_context context, cl_command_que
     size_t localsize[2];
     int err;
 
-    output_ptr   = (int*)malloc(2 * sizeof(int));
+    output_ptr = (int *)malloc(2 * sizeof(int));
 
-    streams = clCreateBuffer(context, (cl_mem_flags)(CL_MEM_READ_WRITE), 2*sizeof(int), NULL, &err);
-    test_error( err, "clCreateBuffer failed.");
+    streams = clCreateBuffer(context, (cl_mem_flags)(CL_MEM_READ_WRITE),
+                             2 * sizeof(int), NULL, &err);
+    test_error(err, "clCreateBuffer failed.");
 
-    err = create_single_kernel_helper_with_build_options(context, &program[0], &kernel[0], 1, &enqueued_local_size_1d_code, "test_enqueued_local_size_1d", "-cl-std=CL2.0");
-    test_error( err, "create_single_kernel_helper failed");
-    err = create_single_kernel_helper_with_build_options(context, &program[1], &kernel[1], 1, &enqueued_local_size_2d_code, "test_enqueued_local_size_2d", "-cl-std=CL2.0");
-    test_error( err, "create_single_kernel_helper failed");
+    err = create_single_kernel_helper_with_build_options(
+    context, &program[0], &kernel[0], 1, &enqueued_local_size_1d_code,
+    "test_enqueued_local_size_1d", "-cl-std=CL2.0");
+    test_error(err, "create_single_kernel_helper failed");
+    err = create_single_kernel_helper_with_build_options(
+    context, &program[1], &kernel[1], 1, &enqueued_local_size_2d_code,
+    "test_enqueued_local_size_2d", "-cl-std=CL2.0");
+    test_error(err, "create_single_kernel_helper failed");
 
-    err  = clSetKernelArg(kernel[0], 0, sizeof streams, &streams);
-    test_error( err, "clSetKernelArgs failed.");
-    err  = clSetKernelArg(kernel[1], 0, sizeof streams, &streams);
-    test_error( err, "clSetKernelArgs failed.");
+    err = clSetKernelArg(kernel[0], 0, sizeof streams, &streams);
+    test_error(err, "clSetKernelArgs failed.");
+    err = clSetKernelArg(kernel[1], 0, sizeof streams, &streams);
+    test_error(err, "clSetKernelArgs failed.");
 
     globalsize[0] = (size_t)num_elements;
     globalsize[1] = (size_t)num_elements;
 
     size_t max_wgs;
-    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_wgs), &max_wgs, NULL);
-    test_error( err, "clGetDeviceInfo failed.");
+    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                          sizeof(max_wgs), &max_wgs, NULL);
+    test_error(err, "clGetDeviceInfo failed.");
 
     localsize[0] = MIN(16, max_wgs);
     localsize[1] = MIN(11, max_wgs / localsize[0]);
 
-    err = clEnqueueNDRangeKernel(queue, kernel[1], 2, NULL, globalsize, localsize, 0, NULL, NULL);
-    test_error( err, "clEnqueueNDRangeKernel failed.");
+    err = clEnqueueNDRangeKernel(queue, kernel[1], 2, NULL, globalsize,
+                                 localsize, 0, NULL, NULL);
+    test_error(err, "clEnqueueNDRangeKernel failed.");
 
-    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, 2*sizeof(int), output_ptr, 0, NULL, NULL);
-    test_error( err, "clEnqueueReadBuffer failed.");
+    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, 2 * sizeof(int),
+                              output_ptr, 0, NULL, NULL);
+    test_error(err, "clEnqueueReadBuffer failed.");
 
     err = verify_enqueued_local_size(output_ptr, localsize, 2);
 
     globalsize[0] = (size_t)num_elements;
     localsize[0] = 9;
-    err = clEnqueueNDRangeKernel(queue, kernel[1], 1, NULL, globalsize, localsize, 0, NULL, NULL);
-    test_error( err, "clEnqueueNDRangeKernel failed.");
+    err = clEnqueueNDRangeKernel(queue, kernel[1], 1, NULL, globalsize,
+                                 localsize, 0, NULL, NULL);
+    test_error(err, "clEnqueueNDRangeKernel failed.");
 
-    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, 2*sizeof(int), output_ptr, 0, NULL, NULL);
-    test_error( err, "clEnqueueReadBuffer failed.");
+    err = clEnqueueReadBuffer(queue, streams, CL_TRUE, 0, 2 * sizeof(int),
+                              output_ptr, 0, NULL, NULL);
+    test_error(err, "clEnqueueReadBuffer failed.");
 
     err = verify_enqueued_local_size(output_ptr, localsize, 1);
 

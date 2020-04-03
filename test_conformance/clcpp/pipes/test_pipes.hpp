@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -79,7 +79,8 @@ struct output_type
 )";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
 std::string generate_source(test_options options)
@@ -250,7 +251,8 @@ std::string generate_source(test_options options)
     }
     else if (options.source == pipe_source::storage)
     {
-        s << "pipe_storage<uint, " << std::to_string(options.max_packets) << "> storage;";
+        s << "pipe_storage<uint, " << std::to_string(options.max_packets)
+          << "> storage;";
         init_out_pipe = "auto out_pipe = storage.get<pipe_access::write>();";
         init_in_pipe = "auto in_pipe = make_pipe(storage);";
     }
@@ -260,7 +262,8 @@ std::string generate_source(test_options options)
         s << R"(
     kernel void producer(pipe<uint, pipe_access::write> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_out_pipe << R"(
+        )" << init_out_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         output[gid].write_reservation_is_valid = 1;
@@ -271,7 +274,8 @@ std::string generate_source(test_options options)
 
     kernel void consumer(pipe<uint, pipe_access::read> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_in_pipe << R"(
+        )" << init_in_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         output[gid].num_packets = in_pipe.num_packets();
@@ -290,7 +294,8 @@ std::string generate_source(test_options options)
         s << R"(
     kernel void producer(pipe<uint, pipe_access::write> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_out_pipe << R"(
+        )" << init_out_pipe
+          << R"(
         const ulong gid = get_global_id(0);
         if (gid % 2 == 1) return;
 
@@ -307,7 +312,8 @@ std::string generate_source(test_options options)
 
     kernel void consumer(pipe<uint, pipe_access::read> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_in_pipe << R"(
+        )" << init_in_pipe
+          << R"(
         const ulong gid = get_global_id(0);
         if (gid % 2 == 1) return;
 
@@ -335,7 +341,8 @@ std::string generate_source(test_options options)
         s << R"(
     kernel void producer(pipe<uint, pipe_access::write> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_out_pipe << R"(
+        )" << init_out_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         auto reservation = out_pipe.work_group_reserve(get_local_size(0));
@@ -348,7 +355,8 @@ std::string generate_source(test_options options)
 
     kernel void consumer(pipe<uint, pipe_access::read> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_in_pipe << R"(
+        )" << init_in_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         output[gid].num_packets = in_pipe.num_packets();
@@ -369,7 +377,8 @@ std::string generate_source(test_options options)
         s << R"(
     kernel void producer(pipe<uint, pipe_access::write> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_out_pipe << R"(
+        )" << init_out_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         auto reservation = out_pipe.sub_group_reserve(get_sub_group_size());
@@ -382,7 +391,8 @@ std::string generate_source(test_options options)
 
     kernel void consumer(pipe<uint, pipe_access::read> pipe_param, global_ptr<output_type[]> output)
     {
-        )" << init_in_pipe << R"(
+        )" << init_in_pipe
+          << R"(
         const ulong gid = get_global_id(0);
 
         output[gid].num_packets = in_pipe.num_packets();
@@ -403,19 +413,23 @@ std::string generate_source(test_options options)
 }
 #endif
 
-int test(cl_device_id device, cl_context context, cl_command_queue queue, test_options options)
+int test(cl_device_id device, cl_context context, cl_command_queue queue,
+         test_options options)
 {
     int error = CL_SUCCESS;
 
-    if (options.num_packets % 2 != 0 || options.max_packets < options.num_packets)
+    if (options.num_packets % 2 != 0
+        || options.max_packets < options.num_packets)
     {
         RETURN_ON_ERROR_MSG(-1, "Invalid test options")
     }
 
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    if (options.operation == pipe_operation::sub_group_reservation && !is_extension_available(device, "cl_khr_subgroups"))
+    if (options.operation == pipe_operation::sub_group_reservation
+        && !is_extension_available(device, "cl_khr_subgroups"))
     {
-        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. Skipping tests.\n");
+        log_info("SKIPPED: Extension `cl_khr_subgroups` is not supported. "
+                 "Skipping tests.\n");
         return CL_SUCCESS;
     }
 #endif
@@ -429,38 +443,36 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
     std::string source = generate_source(options);
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 // Only OpenCL C++ to SPIR-V compilation
 #if defined(DEVELOPMENT) && defined(ONLY_SPIRV_COMPILATION)
-    error = create_opencl_kernel(
-        context, &program, &producer_kernel,
-        source, producer_kernel_name
-    );
+    error = create_opencl_kernel(context, &program, &producer_kernel, source,
+                                 producer_kernel_name);
     RETURN_ON_ERROR(error)
     return error;
 // Use OpenCL C kernels instead of OpenCL C++ kernels (test C++ host code)
 #elif defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    error = create_opencl_kernel(
-        context, &program, &producer_kernel,
-        source, producer_kernel_name, "-cl-std=CL2.0", false
-    );
+    error = create_opencl_kernel(context, &program, &producer_kernel, source,
+                                 producer_kernel_name, "-cl-std=CL2.0", false);
     RETURN_ON_ERROR(error)
-    consumer_kernel = clCreateKernel(program, consumer_kernel_name.c_str(), &error);
+    consumer_kernel =
+    clCreateKernel(program, consumer_kernel_name.c_str(), &error);
     RETURN_ON_CL_ERROR(error, "clCreateKernel")
 // Normal run
 #else
-    error = create_opencl_kernel(
-        context, &program, &producer_kernel,
-        source, producer_kernel_name
-    );
+    error = create_opencl_kernel(context, &program, &producer_kernel, source,
+                                 producer_kernel_name);
     RETURN_ON_ERROR(error)
-    consumer_kernel = clCreateKernel(program, consumer_kernel_name.c_str(), &error);
+    consumer_kernel =
+    clCreateKernel(program, consumer_kernel_name.c_str(), &error);
     RETURN_ON_CL_ERROR(error, "clCreateKernel")
 #endif
 
     size_t max_work_group_size;
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &max_work_group_size, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                            sizeof(size_t), &max_work_group_size, NULL);
     RETURN_ON_CL_ERROR(error, "clGetDeviceInfo")
 
     const size_t count = options.num_packets;
@@ -469,40 +481,44 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 
     const cl_uint packet_size = sizeof(cl_uint);
 
-    cl_mem pipe = clCreatePipe(context, 0, packet_size, options.max_packets, NULL, &error);
+    cl_mem pipe =
+    clCreatePipe(context, 0, packet_size, options.max_packets, NULL, &error);
     RETURN_ON_CL_ERROR(error, "clCreatePipe")
 
     cl_mem output_buffer;
-    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(output_type) * count, NULL, &error);
+    output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                   sizeof(output_type) * count, NULL, &error);
     RETURN_ON_CL_ERROR(error, "clCreateBuffer")
 
     const char pattern = 0;
-    error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern), 0, sizeof(output_type) * count, 0, NULL, NULL);
+    error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern),
+                                0, sizeof(output_type) * count, 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueFillBuffer")
 
     error = clSetKernelArg(producer_kernel, 0, sizeof(cl_mem), &pipe);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
-    error = clSetKernelArg(producer_kernel, 1, sizeof(output_buffer), &output_buffer);
+    error =
+    clSetKernelArg(producer_kernel, 1, sizeof(output_buffer), &output_buffer);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
 
-    error = clEnqueueNDRangeKernel(queue, producer_kernel, 1, NULL, &global_size, NULL, 0, NULL, NULL);
+    error = clEnqueueNDRangeKernel(queue, producer_kernel, 1, NULL,
+                                   &global_size, NULL, 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
     error = clSetKernelArg(consumer_kernel, 0, sizeof(cl_mem), &pipe);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
-    error = clSetKernelArg(consumer_kernel, 1, sizeof(output_buffer), &output_buffer);
+    error =
+    clSetKernelArg(consumer_kernel, 1, sizeof(output_buffer), &output_buffer);
     RETURN_ON_CL_ERROR(error, "clSetKernelArg")
 
-    error = clEnqueueNDRangeKernel(queue, consumer_kernel, 1, NULL, &global_size, &local_size, 0, NULL, NULL);
+    error = clEnqueueNDRangeKernel(queue, consumer_kernel, 1, NULL,
+                                   &global_size, &local_size, 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
     std::vector<output_type> output(count);
     error = clEnqueueReadBuffer(
-        queue, output_buffer, CL_TRUE,
-        0, sizeof(output_type) * count,
-        static_cast<void *>(output.data()),
-        0, NULL, NULL
-    );
+    queue, output_buffer, CL_TRUE, 0, sizeof(output_type) * count,
+    static_cast<void *>(output.data()), 0, NULL, NULL);
     RETURN_ON_CL_ERROR(error, "clEnqueueReadBuffer")
 
     std::vector<bool> existing_values(count, false);
@@ -553,8 +569,7 @@ int test(cl_device_id device, cl_context context, cl_command_queue queue, test_o
 }
 
 const pipe_operation pipe_operations[] = {
-    pipe_operation::work_item,
-    pipe_operation::work_item_reservation,
+    pipe_operation::work_item, pipe_operation::work_item_reservation,
     pipe_operation::work_group_reservation,
     pipe_operation::sub_group_reservation
 };
@@ -570,59 +585,59 @@ const std::tuple<int, int> max_and_num_packets[] = {
 };
 
 AUTO_TEST_CASE(test_pipes_pipe)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     std::vector<std::tuple<int, int>> ps;
     for (auto p : max_and_num_packets)
     {
-        if (std::get<0>(p) < num_elements)
-            ps.push_back(p);
+        if (std::get<0>(p) < num_elements) ps.push_back(p);
     }
     ps.push_back(std::tuple<int, int>(num_elements, num_elements));
 
     int error = CL_SUCCESS;
 
     for (auto operation : pipe_operations)
-    for (auto p : ps)
-    {
-        test_options options;
-        options.source = pipe_source::param;
-        options.max_packets = std::get<0>(p);
-        options.num_packets = std::get<1>(p);
-        options.operation = operation;
+        for (auto p : ps)
+        {
+            test_options options;
+            options.source = pipe_source::param;
+            options.max_packets = std::get<0>(p);
+            options.num_packets = std::get<1>(p);
+            options.operation = operation;
 
-        error = test(device, context, queue, options);
-        RETURN_ON_ERROR(error)
-    }
+            error = test(device, context, queue, options);
+            RETURN_ON_ERROR(error)
+        }
 
     return error;
 }
 
 AUTO_TEST_CASE(test_pipes_pipe_storage)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     std::vector<std::tuple<int, int>> ps;
     for (auto p : max_and_num_packets)
     {
-        if (std::get<0>(p) < num_elements)
-            ps.push_back(p);
+        if (std::get<0>(p) < num_elements) ps.push_back(p);
     }
     ps.push_back(std::tuple<int, int>(num_elements, num_elements));
 
     int error = CL_SUCCESS;
 
     for (auto operation : pipe_operations)
-    for (auto p : ps)
-    {
-        test_options options;
-        options.source = pipe_source::storage;
-        options.max_packets = std::get<0>(p);
-        options.num_packets = std::get<1>(p);
-        options.operation = operation;
+        for (auto p : ps)
+        {
+            test_options options;
+            options.source = pipe_source::storage;
+            options.max_packets = std::get<0>(p);
+            options.num_packets = std::get<1>(p);
+            options.operation = operation;
 
-        error = test(device, context, queue, options);
-        RETURN_ON_ERROR(error)
-    }
+            error = test(device, context, queue, options);
+            RETURN_ON_ERROR(error)
+        }
 
     return error;
 }

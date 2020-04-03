@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,23 +19,25 @@
 // Enable development options for OpenCL C++ tests (test_conformance/clpp)
 // #define DEVELOPMENT
 #if defined(CLPP_DEVELOPMENT_OPTIONS) && !defined(DEVELOPMENT)
-    #define DEVELOPMENT
+#define DEVELOPMENT
 #endif
 
 #ifdef DEVELOPMENT
-    // If defined OpenCL C++ tests only checks if OpenCL C++ kernels compiles correctly
-    // #define ONLY_SPIRV_COMPILATION
-    #if defined(CLPP_DEVELOPMENT_ONLY_SPIRV_COMPILATION) && !defined(ONLY_SPIRV_COMPILATION)
-        #define ONLY_SPIRV_COMPILATION
-    #endif
+// If defined OpenCL C++ tests only checks if OpenCL C++ kernels compiles
+// correctly #define ONLY_SPIRV_COMPILATION
+#if defined(CLPP_DEVELOPMENT_ONLY_SPIRV_COMPILATION)                           \
+&& !defined(ONLY_SPIRV_COMPILATION)
+#define ONLY_SPIRV_COMPILATION
+#endif
 
-    #ifndef ONLY_SPIRV_COMPILATION
-        // If defined OpenCL C++ tests are run using OpenCL C kernels
-        // #define USE_OPENCLC_KERNELS
-        #if defined(CLPP_DEVELOPMENT_USE_OPENCLC_KERNELS) && !defined(USE_OPENCLC_KERNELS)
-            #define USE_OPENCLC_KERNELS
-        #endif
-    #endif    
+#ifndef ONLY_SPIRV_COMPILATION
+// If defined OpenCL C++ tests are run using OpenCL C kernels
+// #define USE_OPENCLC_KERNELS
+#if defined(CLPP_DEVELOPMENT_USE_OPENCLC_KERNELS)                              \
+&& !defined(USE_OPENCLC_KERNELS)
+#define USE_OPENCLC_KERNELS
+#endif
+#endif
 #endif
 
 #endif // TEST_COMMON_CONFIG_HPP

@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,19 +17,33 @@
 #include "harness/mt19937.h"
 
 
-extern int test_buffers( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_buffers_getinfo( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-extern int test_images_create( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_images_read( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_images_2D_getinfo( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-extern int test_images_read_cube( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_images_cube_getinfo( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-extern int test_images_read_3D( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_images_3D_getinfo( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-extern int test_images_write( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_images_write_cube( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_renderbuffer_read( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_renderbuffer_write( cl_device_id device, cl_context context, cl_command_queue queue, int num_elements );
-extern int test_renderbuffer_getinfo( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-extern int test_fence_sync( cl_device_id device, cl_context context, cl_command_queue queue, int numElements );
-
+extern int test_buffers(cl_device_id device, cl_context context,
+                        cl_command_queue queue, int num_elements);
+extern int test_buffers_getinfo(cl_device_id device, cl_context context,
+                                cl_command_queue queue, int numElements);
+extern int test_images_create(cl_device_id device, cl_context context,
+                              cl_command_queue queue, int num_elements);
+extern int test_images_read(cl_device_id device, cl_context context,
+                            cl_command_queue queue, int num_elements);
+extern int test_images_2D_getinfo(cl_device_id device, cl_context context,
+                                  cl_command_queue queue, int numElements);
+extern int test_images_read_cube(cl_device_id device, cl_context context,
+                                 cl_command_queue queue, int num_elements);
+extern int test_images_cube_getinfo(cl_device_id device, cl_context context,
+                                    cl_command_queue queue, int numElements);
+extern int test_images_read_3D(cl_device_id device, cl_context context,
+                               cl_command_queue queue, int num_elements);
+extern int test_images_3D_getinfo(cl_device_id device, cl_context context,
+                                  cl_command_queue queue, int numElements);
+extern int test_images_write(cl_device_id device, cl_context context,
+                             cl_command_queue queue, int num_elements);
+extern int test_images_write_cube(cl_device_id device, cl_context context,
+                                  cl_command_queue queue, int num_elements);
+extern int test_renderbuffer_read(cl_device_id device, cl_context context,
+                                  cl_command_queue queue, int num_elements);
+extern int test_renderbuffer_write(cl_device_id device, cl_context context,
+                                   cl_command_queue queue, int num_elements);
+extern int test_renderbuffer_getinfo(cl_device_id device, cl_context context,
+                                     cl_command_queue queue, int numElements);
+extern int test_fence_sync(cl_device_id device, cl_context context,
+                           cl_command_queue queue, int numElements);

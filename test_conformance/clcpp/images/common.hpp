@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,80 +24,107 @@
 #include "../harness/imageHelpers.h"
 
 
-namespace detail
-{
+namespace detail {
 
-template<cl_channel_type channel_type>
-struct channel_info;
+template <cl_channel_type channel_type> struct channel_info;
 
-template<>
-struct channel_info<CL_SIGNED_INT8>
+template <> struct channel_info<CL_SIGNED_INT8>
 {
     typedef cl_char channel_type;
     typedef cl_int4 element_type;
     static std::string function_suffix() { return "i"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_SIGNED_INT16>
+template <> struct channel_info<CL_SIGNED_INT16>
 {
     typedef cl_short channel_type;
     typedef cl_int4 element_type;
     static std::string function_suffix() { return "i"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_SIGNED_INT32>
+template <> struct channel_info<CL_SIGNED_INT32>
 {
     typedef cl_int channel_type;
     typedef cl_int4 element_type;
     static std::string function_suffix() { return "i"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_UNSIGNED_INT8>
+template <> struct channel_info<CL_UNSIGNED_INT8>
 {
     typedef cl_uchar channel_type;
     typedef cl_uint4 element_type;
     static std::string function_suffix() { return "ui"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_UNSIGNED_INT16>
+template <> struct channel_info<CL_UNSIGNED_INT16>
 {
     typedef cl_ushort channel_type;
     typedef cl_uint4 element_type;
     static std::string function_suffix() { return "ui"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_UNSIGNED_INT32>
+template <> struct channel_info<CL_UNSIGNED_INT32>
 {
     typedef cl_uint channel_type;
     typedef cl_uint4 element_type;
     static std::string function_suffix() { return "ui"; }
 
-    channel_type channel_min() { return (std::numeric_limits<channel_type>::min)(); }
-    channel_type channel_max() { return (std::numeric_limits<channel_type>::max)(); }
+    channel_type channel_min()
+    {
+        return (std::numeric_limits<channel_type>::min)();
+    }
+    channel_type channel_max()
+    {
+        return (std::numeric_limits<channel_type>::max)();
+    }
 };
 
-template<>
-struct channel_info<CL_FLOAT>
+template <> struct channel_info<CL_FLOAT>
 {
     typedef cl_float channel_type;
     typedef cl_float4 element_type;
@@ -107,25 +134,21 @@ struct channel_info<CL_FLOAT>
     channel_type channel_max() { return +1e+3f; }
 };
 
-template<cl_mem_object_type image_type>
-struct image_info;
+template <cl_mem_object_type image_type> struct image_info;
 
-template<>
-struct image_info<CL_MEM_OBJECT_IMAGE1D>
+template <> struct image_info<CL_MEM_OBJECT_IMAGE1D>
 {
     static std::string image_type_name() { return "image1d"; }
     static std::string coord_accessor() { return "x"; }
 };
 
-template<>
-struct image_info<CL_MEM_OBJECT_IMAGE2D>
+template <> struct image_info<CL_MEM_OBJECT_IMAGE2D>
 {
     static std::string image_type_name() { return "image2d"; }
     static std::string coord_accessor() { return "xy"; }
 };
 
-template<>
-struct image_info<CL_MEM_OBJECT_IMAGE3D>
+template <> struct image_info<CL_MEM_OBJECT_IMAGE3D>
 {
     static std::string image_type_name() { return "image3d"; }
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
@@ -137,14 +160,15 @@ struct image_info<CL_MEM_OBJECT_IMAGE3D>
 
 } // namespace
 
-template<cl_mem_object_type ImageType, cl_channel_type ChannelType>
-struct image_test_base :
-    detail::channel_info<ChannelType>,
-    detail::image_info<ImageType>
-{ };
+template <cl_mem_object_type ImageType, cl_channel_type ChannelType>
+struct image_test_base : detail::channel_info<ChannelType>,
+                         detail::image_info<ImageType>
+{
+};
 
 // Create image_descriptor (used by harness/imageHelpers functions)
-image_descriptor create_image_descriptor(cl_image_desc &image_desc, cl_image_format *image_format)
+image_descriptor create_image_descriptor(cl_image_desc& image_desc,
+                                         cl_image_format* image_format)
 {
     image_descriptor image_info;
     image_info.width = image_desc.image_width;
@@ -162,7 +186,8 @@ image_descriptor create_image_descriptor(cl_image_desc &image_desc, cl_image_for
 
 const std::vector<cl_channel_order> get_channel_orders(cl_device_id device)
 {
-    // According to "Minimum List of Supported Image Formats" of OpenCL specification:
+    // According to "Minimum List of Supported Image Formats" of OpenCL
+    // specification:
     return { CL_R, CL_RG, CL_RGBA };
 }
 
@@ -178,13 +203,11 @@ bool is_test_supported(cl_device_id device)
 }
 
 // Checks if x is equal to y.
-template<class type>
-inline bool are_equal(const type& x,
-                      const type& y)
+template <class type> inline bool are_equal(const type& x, const type& y)
 {
-    for(size_t i = 0; i < vector_size<type>::value; i++)
+    for (size_t i = 0; i < vector_size<type>::value; i++)
     {
-        if(!(x.s[i] == y.s[i]))
+        if (!(x.s[i] == y.s[i]))
         {
             return false;
         }

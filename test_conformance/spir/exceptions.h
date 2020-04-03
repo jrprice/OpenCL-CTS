@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,35 +19,34 @@
 #include <stdexcept>
 #include "miniz/miniz.h"
 
-namespace Exceptions
-{
-    /**
+namespace Exceptions {
+/**
     Exception thrown on error in command line parameters
     */
-    class CmdLineError : public std::runtime_error
-    {
-    public:
-        CmdLineError (const std::string& msg): std::runtime_error(msg){}
-    };
+class CmdLineError : public std::runtime_error {
+public:
+    CmdLineError(const std::string& msg): std::runtime_error(msg) {}
+};
 
-    /**
+/**
     Exception thrown on error in test run
     */
-    class TestError : public std::runtime_error
-    {
-    public:
-        TestError (const std::string& msg, int errorCode = 1): std::runtime_error(msg), m_errorCode(errorCode){}
+class TestError : public std::runtime_error {
+public:
+    TestError(const std::string& msg, int errorCode = 1)
+        : std::runtime_error(msg), m_errorCode(errorCode)
+    {}
 
-        int getErrorCode() const { return m_errorCode; }
-    private:
-        int m_errorCode;
-    };
+    int getErrorCode() const { return m_errorCode; }
 
-    class ArchiveError : public std::runtime_error
-    {
-    public:
-        ArchiveError(int errCode): std::runtime_error(mz_error(errCode)){}
-    };
+private:
+    int m_errorCode;
+};
+
+class ArchiveError : public std::runtime_error {
+public:
+    ArchiveError(int errCode): std::runtime_error(mz_error(errCode)) {}
+};
 }
 
 #endif

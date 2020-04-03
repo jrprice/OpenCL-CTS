@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -39,17 +39,17 @@
 // Types
 //-----------------------------------------
 enum Type
- {
-     TYPE_INT,
-     TYPE_FLOAT,
-     TYPE_OCTAL,
-     TYPE_UNSIGNED,
-     TYPE_HEXADEC,
-     TYPE_CHAR,
-     TYPE_STRING,
-     TYPE_VECTOR,
-     TYPE_ADDRESS_SPACE,
-     TYPE_COUNT
+{
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_OCTAL,
+    TYPE_UNSIGNED,
+    TYPE_HEXADEC,
+    TYPE_CHAR,
+    TYPE_STRING,
+    TYPE_VECTOR,
+    TYPE_ADDRESS_SPACE,
+    TYPE_COUNT
 };
 
 struct printDataGenParameters
@@ -67,52 +67,59 @@ struct printDataGenParameters
 };
 
 //-----------------------------------------
-//Test Case
+// Test Case
 //-----------------------------------------
 
 struct testCase
 {
-    unsigned int _testNum;                           //test number
-    enum Type _type;                                 //(data)type for test
-    //const char** _strPrint;                          //auxiliary data to build the code for kernel source
-    const char** _correctBuffer;                     //look-up table for correct results for printf
-    struct printDataGenParameters* _genParameters;   //auxiliary data to build the code for kernel source
+    unsigned int _testNum; // test number
+    enum Type _type; //(data)type for test
+    // const char** _strPrint;                          //auxiliary data to
+    // build the code for kernel source
+    const char** _correctBuffer; // look-up table for correct results for printf
+    struct printDataGenParameters*
+    _genParameters; // auxiliary data to build the code for kernel source
 };
 
 
 extern const char* strType[];
 extern testCase* allTestCase[];
 
-size_t verifyOutputBuffer(char *analysisBuffer,testCase* pTestCase,size_t testId,cl_ulong pAddr = 0);
+size_t verifyOutputBuffer(char* analysisBuffer, testCase* pTestCase,
+                          size_t testId, cl_ulong pAddr = 0);
 
 // Helpful macros
 
 // The next three functions check on different return values.  Returns -1
 // if the check failed
-#define checkErr(err, msg)                \
-    if (err != CL_SUCCESS) {                \
-    log_error("%s failed errcode:%d\n", msg, err);    \
-    return -1;                    \
+#define checkErr(err, msg)                                                     \
+    if (err != CL_SUCCESS)                                                     \
+    {                                                                          \
+        log_error("%s failed errcode:%d\n", msg, err);                         \
+        return -1;                                                             \
     }
 
-#define checkZero(val, msg)                \
-    if (val == 0) {                    \
-    log_error("%s failed errcode:%d\n", msg, err);    \
-    return -1;                    \
+#define checkZero(val, msg)                                                    \
+    if (val == 0)                                                              \
+    {                                                                          \
+        log_error("%s failed errcode:%d\n", msg, err);                         \
+        return -1;                                                             \
     }
 
-#define checkNull(ptr, msg)            \
-    if (!ptr) {                    \
-    log_error("%s failed\n", msg);        \
-    return TEST_FAIL;                \
+#define checkNull(ptr, msg)                                                    \
+    if (!ptr)                                                                  \
+    {                                                                          \
+        log_error("%s failed\n", msg);                                         \
+        return TEST_FAIL;                                                      \
     }
 
 // When a helper returns a negative one, we want to return from main
 // with negative one. This helper prevents me from having to write
 // this multiple time
-#define checkHelperErr(err)            \
-    if (err == -1) {                \
-    return err;                \
+#define checkHelperErr(err)                                                    \
+    if (err == -1)                                                             \
+    {                                                                          \
+        return err;                                                            \
     }
 
 #endif // TESTSPRINTF_INCLUDED_H

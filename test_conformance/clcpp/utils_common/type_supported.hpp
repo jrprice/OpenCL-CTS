@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,19 +19,17 @@
 #include "../common.hpp"
 
 // Returns true if type is supported by device; otherwise - false;
-template<class Type>
-bool type_supported(cl_device_id device)
+template <class Type> bool type_supported(cl_device_id device)
 {
-    (void) device;
+    (void)device;
     return false;
 }
 
-#define ADD_SUPPORTED_TYPE(Type) \
-    template<> \
-    bool type_supported<Type>(cl_device_id device) \
-    { \
-        (void) device; \
-        return true; \
+#define ADD_SUPPORTED_TYPE(Type)                                               \
+    template <> bool type_supported<Type>(cl_device_id device)                 \
+    {                                                                          \
+        (void)device;                                                          \
+        return true;                                                           \
     }
 
 ADD_SUPPORTED_TYPE(cl_char)
@@ -42,14 +40,14 @@ ADD_SUPPORTED_TYPE(cl_int)
 ADD_SUPPORTED_TYPE(cl_uint)
 
 // ulong
-template<>
-bool type_supported<cl_ulong>(cl_device_id device)
+template <> bool type_supported<cl_ulong>(cl_device_id device)
 {
     // long types do not have to be supported in EMBEDDED_PROFILE.
     char profile[128];
     int error;
 
-    error = clGetDeviceInfo(device, CL_DEVICE_PROFILE, sizeof(profile), (void *)&profile, NULL);
+    error = clGetDeviceInfo(device, CL_DEVICE_PROFILE, sizeof(profile),
+                            (void *)&profile, NULL);
     if (error != CL_SUCCESS)
     {
         log_error("ERROR: clGetDeviceInfo failed with CL_DEVICE_PROFILE\n");
@@ -62,30 +60,27 @@ bool type_supported<cl_ulong>(cl_device_id device)
     return true;
 }
 // long
-template<>
-bool type_supported<cl_long>(cl_device_id device)
+template <> bool type_supported<cl_long>(cl_device_id device)
 {
     return type_supported<cl_ulong>(device);
 }
 ADD_SUPPORTED_TYPE(cl_float)
 // double
-template<>
-bool type_supported<cl_double>(cl_device_id device)
+template <> bool type_supported<cl_double>(cl_device_id device)
 {
     return is_extension_available(device, "cl_khr_fp64");
 }
 
-#define ADD_SUPPORTED_VEC_TYPE1(Type, n) \
-    template<> \
-    bool type_supported<Type ## n>(cl_device_id device) \
-    { \
-        return type_supported<Type>(device); \
+#define ADD_SUPPORTED_VEC_TYPE1(Type, n)                                       \
+    template <> bool type_supported<Type##n>(cl_device_id device)              \
+    {                                                                          \
+        return type_supported<Type>(device);                                   \
     }
 
-#define ADD_SUPPORTED_VEC_TYPE2(Type) \
-    ADD_SUPPORTED_VEC_TYPE1(Type, 2) \
-    ADD_SUPPORTED_VEC_TYPE1(Type, 4) \
-    ADD_SUPPORTED_VEC_TYPE1(Type, 8) \
+#define ADD_SUPPORTED_VEC_TYPE2(Type)                                          \
+    ADD_SUPPORTED_VEC_TYPE1(Type, 2)                                           \
+    ADD_SUPPORTED_VEC_TYPE1(Type, 4)                                           \
+    ADD_SUPPORTED_VEC_TYPE1(Type, 8)                                           \
     ADD_SUPPORTED_VEC_TYPE1(Type, 16)
 
 ADD_SUPPORTED_VEC_TYPE2(cl_char)

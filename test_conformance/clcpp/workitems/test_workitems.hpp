@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -35,7 +35,7 @@ struct test_options
 
 struct output_type
 {
-    cl_uint  work_dim;
+    cl_uint work_dim;
     cl_ulong global_size[3];
     cl_ulong global_id[3];
     cl_ulong local_size[3];
@@ -78,12 +78,12 @@ struct output_type
 )";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 #if defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-const std::string source =
-    source_common +
-    R"(
+const std::string source = source_common +
+R"(
         #ifdef cl_khr_subgroups
         #pragma OPENCL EXTENSION cl_khr_subgroups : enable
         #endif
@@ -117,13 +117,13 @@ const std::string source =
     )";
 #else
 const std::string source =
-    R"(
+R"(
         #include <opencl_memory>
         #include <opencl_work_item>
         using namespace cl;
-    )" +
-    source_common +
-    R"(
+    )"
++ source_common +
+R"(
 
         kernel void test(global_ptr<output_type[]> output)
         {
@@ -153,24 +153,23 @@ const std::string source =
     )";
 #endif
 
-#define CHECK_EQUAL(result, expected, func_name) \
-    if (result != expected) \
-    { \
-        RETURN_ON_ERROR_MSG(-1, \
-            "Function %s failed. Expected: %s, got: %s", func_name, \
-            format_value(expected).c_str(), format_value(result).c_str() \
-        ); \
+#define CHECK_EQUAL(result, expected, func_name)                               \
+    if (result != expected)                                                    \
+    {                                                                          \
+        RETURN_ON_ERROR_MSG(-1, "Function %s failed. Expected: %s, got: %s",   \
+                            func_name, format_value(expected).c_str(),         \
+                            format_value(result).c_str());                     \
     }
 
-#define CHECK(expression, func_name) \
-    if (expression) \
-    { \
-        RETURN_ON_ERROR_MSG(-1, \
-            "Function %s returned incorrect result", func_name \
-        ); \
+#define CHECK(expression, func_name)                                           \
+    if (expression)                                                            \
+    {                                                                          \
+        RETURN_ON_ERROR_MSG(-1, "Function %s returned incorrect result",       \
+                            func_name);                                        \
     }
 
-int test_workitems(cl_device_id device, cl_context context, cl_command_queue queue, test_options options)
+int test_workitems(cl_device_id device, cl_context context,
+                   cl_command_queue queue, test_options options)
 {
     int error = CL_SUCCESS;
 
@@ -180,35 +179,31 @@ int test_workitems(cl_device_id device, cl_context context, cl_command_queue que
     std::string kernel_name = "test";
 
 // -----------------------------------------------------------------------------------
-// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT ------------------
+// ------------- ONLY FOR OPENCL 22 CONFORMANCE TEST 22 DEVELOPMENT
+// ------------------
 // -----------------------------------------------------------------------------------
 // Only OpenCL C++ to SPIR-V compilation
 #if defined(DEVELOPMENT) && defined(ONLY_SPIRV_COMPILATION)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
     return error;
 // Use OpenCL C kernels instead of OpenCL C++ kernels (test C++ host code)
 #elif defined(DEVELOPMENT) && defined(USE_OPENCLC_KERNELS)
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name, "-cl-std=CL2.0", false
-    );
+    error = create_opencl_kernel(context, &program, &kernel, source,
+                                 kernel_name, "-cl-std=CL2.0", false);
     RETURN_ON_ERROR(error)
 // Normal run
 #else
-    error = create_opencl_kernel(
-        context, &program, &kernel,
-        source, kernel_name
-    );
+    error =
+    create_opencl_kernel(context, &program, &kernel, source, kernel_name);
     RETURN_ON_ERROR(error)
 #endif
 
     size_t max_work_group_size;
     size_t max_local_sizes[3];
-    error = get_max_allowed_work_group_size(context, kernel, &max_work_group_size, max_local_sizes);
+    error = get_max_allowed_work_group_size(
+    context, kernel, &max_work_group_size, max_local_sizes);
     RETURN_ON_ERROR(error)
 
     bool check_sub_groups = true;
@@ -221,7 +216,9 @@ int test_workitems(cl_device_id device, cl_context context, cl_command_queue que
         size_t major, minor;
         error = get_device_version(device, &major, &minor);
         RETURN_ON_ERROR(error)
-        check_sub_groups_limits = (major > 2 || major == 2 && minor >= 1); // clGetKernelSubGroupInfo is from 2.1
+        check_sub_groups_limits =
+        (major > 2
+         || major == 2 && minor >= 1); // clGetKernelSubGroupInfo is from 2.1
         check_sub_groups = true;
     }
 #endif
@@ -238,52 +235,63 @@ int test_workitems(cl_device_id device, cl_context context, cl_command_queue que
             size_t global_offset[3] = { 0, 0, 0 };
             size_t enqueued_local_size[3] = { 1, 1, 1 };
             size_t count = count_dis(gen);
-            std::uniform_int_distribution<size_t> global_size_dis(1, static_cast<size_t>(pow(count, 1.0 / dim)));
+            std::uniform_int_distribution<size_t> global_size_dis(
+            1, static_cast<size_t>(pow(count, 1.0 / dim)));
             for (int d = 0; d < dim; d++)
             {
-                std::uniform_int_distribution<size_t> enqueued_local_size_dis(1, max_local_sizes[d]);
+                std::uniform_int_distribution<size_t> enqueued_local_size_dis(
+                1, max_local_sizes[d]);
                 global_size[d] = global_size_dis(gen);
                 global_offset[d] = global_size_dis(gen);
                 enqueued_local_size[d] = enqueued_local_size_dis(gen);
             }
-            // Local work size must not exceed CL_KERNEL_WORK_GROUP_SIZE for this kernel
-            while (enqueued_local_size[0] * enqueued_local_size[1] * enqueued_local_size[2] > max_work_group_size)
+            // Local work size must not exceed CL_KERNEL_WORK_GROUP_SIZE for
+            // this kernel
+            while (enqueued_local_size[0] * enqueued_local_size[1]
+                   * enqueued_local_size[2]
+                   > max_work_group_size)
             {
                 // otherwise decrease it until it fits
                 for (int d = 0; d < dim; d++)
                 {
-                    enqueued_local_size[d] = (std::max)((size_t)1, enqueued_local_size[d] / 2);
+                    enqueued_local_size[d] =
+                    (std::max)((size_t)1, enqueued_local_size[d] / 2);
                 }
             }
             if (options.uniform_work_group_size)
             {
                 for (int d = 0; d < dim; d++)
                 {
-                    global_size[d] = get_uniform_global_size(global_size[d], enqueued_local_size[d]);
+                    global_size[d] = get_uniform_global_size(
+                    global_size[d], enqueued_local_size[d]);
                 }
             }
             count = global_size[0] * global_size[1] * global_size[2];
 
-            cl_mem output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(output_type) * count, NULL, &error);
+            cl_mem output_buffer =
+            clCreateBuffer(context, CL_MEM_READ_WRITE,
+                           sizeof(output_type) * count, NULL, &error);
             RETURN_ON_CL_ERROR(error, "clCreateBuffer")
 
             const char pattern = 0;
-            error = clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern), 0, sizeof(output_type) * count, 0, NULL, NULL);
+            error =
+            clEnqueueFillBuffer(queue, output_buffer, &pattern, sizeof(pattern),
+                                0, sizeof(output_type) * count, 0, NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueFillBuffer")
 
-            error = clSetKernelArg(kernel, 0, sizeof(output_buffer), &output_buffer);
+            error =
+            clSetKernelArg(kernel, 0, sizeof(output_buffer), &output_buffer);
             RETURN_ON_CL_ERROR(error, "clSetKernelArg")
 
-            error = clEnqueueNDRangeKernel(queue, kernel, dim, global_offset, global_size, enqueued_local_size, 0, NULL, NULL);
+            error = clEnqueueNDRangeKernel(queue, kernel, dim, global_offset,
+                                           global_size, enqueued_local_size, 0,
+                                           NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueNDRangeKernel")
 
             std::vector<output_type> output(count);
             error = clEnqueueReadBuffer(
-                queue, output_buffer, CL_TRUE,
-                0, sizeof(output_type) * count,
-                static_cast<void *>(output.data()),
-                0, NULL, NULL
-            );
+            queue, output_buffer, CL_TRUE, 0, sizeof(output_type) * count,
+            static_cast<void *>(output.data()), 0, NULL, NULL);
             RETURN_ON_CL_ERROR(error, "clEnqueueReadBuffer")
 
             error = clReleaseMemObject(output_buffer);
@@ -293,95 +301,151 @@ int test_workitems(cl_device_id device, cl_context context, cl_command_queue que
             size_t max_sub_group_size_for_ndrange = 0;
             if (check_sub_groups_limits)
             {
-                error = clGetKernelSubGroupInfo(kernel, device, CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
-                    sizeof(size_t) * dim, enqueued_local_size,
-                    sizeof(size_t), &sub_group_count_for_ndrange, NULL);
+                error = clGetKernelSubGroupInfo(
+                kernel, device, CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE,
+                sizeof(size_t) * dim, enqueued_local_size, sizeof(size_t),
+                &sub_group_count_for_ndrange, NULL);
                 RETURN_ON_CL_ERROR(error, "clGetKernelSubGroupInfo")
 
-                error = clGetKernelSubGroupInfo(kernel, device, CL_KERNEL_MAX_SUB_GROUP_SIZE_FOR_NDRANGE,
-                    sizeof(size_t) * dim, enqueued_local_size,
-                    sizeof(size_t), &max_sub_group_size_for_ndrange, NULL);
+                error = clGetKernelSubGroupInfo(
+                kernel, device, CL_KERNEL_MAX_SUB_GROUP_SIZE_FOR_NDRANGE,
+                sizeof(size_t) * dim, enqueued_local_size, sizeof(size_t),
+                &max_sub_group_size_for_ndrange, NULL);
                 RETURN_ON_CL_ERROR(error, "clGetKernelSubGroupInfo")
             }
 
             size_t num_groups[3];
             for (int d = 0; d < 3; d++)
-                num_groups[d] = static_cast<size_t>(std::ceil(static_cast<double>(global_size[d]) / enqueued_local_size[d]));
+                num_groups[d] = static_cast<size_t>(std::ceil(
+                static_cast<double>(global_size[d]) / enqueued_local_size[d]));
 
             size_t group_id[3];
             for (group_id[0] = 0; group_id[0] < num_groups[0]; group_id[0]++)
-            for (group_id[1] = 0; group_id[1] < num_groups[1]; group_id[1]++)
-            for (group_id[2] = 0; group_id[2] < num_groups[2]; group_id[2]++)
-            {
-                size_t local_size[3];
-                for (int d = 0; d < 3; d++)
-                {
-                    if (group_id[d] == num_groups[d] - 1)
-                        local_size[d] = global_size[d] - group_id[d] * enqueued_local_size[d];
-                    else
-                        local_size[d] = enqueued_local_size[d];
-                }
-
-                size_t local_id[3];
-                for (local_id[0] = 0; local_id[0] < local_size[0]; local_id[0]++)
-                for (local_id[1] = 0; local_id[1] < local_size[1]; local_id[1]++)
-                for (local_id[2] = 0; local_id[2] < local_size[2]; local_id[2]++)
-                {
-                    size_t global_id_wo_offset[3];
-                    size_t global_id[3];
-                    for (int d = 0; d < 3; d++)
+                for (group_id[1] = 0; group_id[1] < num_groups[1];
+                     group_id[1]++)
+                    for (group_id[2] = 0; group_id[2] < num_groups[2];
+                         group_id[2]++)
                     {
-                        global_id_wo_offset[d] = group_id[d] * enqueued_local_size[d] + local_id[d];
-                        global_id[d] = global_id_wo_offset[d] + global_offset[d];
-                    }
-
-                    // Ignore if the current work-item is outside of global work size (i.e. the work-group is non-uniform)
-                    if (global_id_wo_offset[0] >= global_size[0] ||
-                        global_id_wo_offset[1] >= global_size[1] ||
-                        global_id_wo_offset[2] >= global_size[2]) break;
-
-                    const size_t global_linear_id =
-                        global_id_wo_offset[2] * global_size[1] * global_size[0] +
-                        global_id_wo_offset[1] * global_size[0] +
-                        global_id_wo_offset[0];
-                    const size_t local_linear_id =
-                        local_id[2] * local_size[1] * local_size[0] +
-                        local_id[1] * local_size[0] +
-                        local_id[0];
-
-                    const output_type &o = output[global_linear_id];
-
-                    CHECK_EQUAL(o.work_dim, dim, "get_work_dim")
-                    for (int d = 0; d < 3; d++)
-                    {
-                        CHECK_EQUAL(o.global_size[d], global_size[d], "get_global_size")
-                        CHECK_EQUAL(o.global_id[d], global_id[d], "get_global_id")
-                        CHECK_EQUAL(o.local_size[d], local_size[d], "get_local_size")
-                        CHECK_EQUAL(o.enqueued_local_size[d], enqueued_local_size[d], "get_enqueued_local_size")
-                        CHECK_EQUAL(o.local_id[d], local_id[d], "get_local_id")
-                        CHECK_EQUAL(o.num_groups[d], num_groups[d], "get_num_groups")
-                        CHECK_EQUAL(o.group_id[d], group_id[d], "get_group_id")
-                        CHECK_EQUAL(o.global_offset[d], global_offset[d], "get_global_offset")
-                    }
-
-                    CHECK_EQUAL(o.global_linear_id, global_linear_id, "get_global_linear_id")
-                    CHECK_EQUAL(o.local_linear_id, local_linear_id, "get_local_linear_id")
-
-                    // A few (but not all possible) sub-groups related checks
-                    if (check_sub_groups)
-                    {
-                        if (check_sub_groups_limits)
+                        size_t local_size[3];
+                        for (int d = 0; d < 3; d++)
                         {
-                            CHECK_EQUAL(o.max_sub_group_size, max_sub_group_size_for_ndrange, "get_max_sub_group_size")
-                            CHECK_EQUAL(o.enqueued_num_sub_groups, sub_group_count_for_ndrange, "get_enqueued_num_sub_groups")
+                            if (group_id[d] == num_groups[d] - 1)
+                                local_size[d] = global_size[d]
+                                - group_id[d] * enqueued_local_size[d];
+                            else
+                                local_size[d] = enqueued_local_size[d];
                         }
-                        CHECK(o.sub_group_size == 0 || o.sub_group_size > o.max_sub_group_size, "get_sub_group_size or get_max_sub_group_size")
-                        CHECK(o.num_sub_groups == 0 || o.num_sub_groups > o.enqueued_num_sub_groups, "get_enqueued_num_sub_groups")
-                        CHECK(o.sub_group_id >= o.num_sub_groups, "get_sub_group_id or get_num_sub_groups")
-                        CHECK(o.sub_group_local_id >= o.sub_group_size, "get_sub_group_local_id or get_sub_group_size")
+
+                        size_t local_id[3];
+                        for (local_id[0] = 0; local_id[0] < local_size[0];
+                             local_id[0]++)
+                            for (local_id[1] = 0; local_id[1] < local_size[1];
+                                 local_id[1]++)
+                                for (local_id[2] = 0;
+                                     local_id[2] < local_size[2]; local_id[2]++)
+                                {
+                                    size_t global_id_wo_offset[3];
+                                    size_t global_id[3];
+                                    for (int d = 0; d < 3; d++)
+                                    {
+                                        global_id_wo_offset[d] =
+                                        group_id[d] * enqueued_local_size[d]
+                                        + local_id[d];
+                                        global_id[d] = global_id_wo_offset[d]
+                                        + global_offset[d];
+                                    }
+
+                                    // Ignore if the current work-item is
+                                    // outside of global work size (i.e. the
+                                    // work-group is non-uniform)
+                                    if (global_id_wo_offset[0] >= global_size[0]
+                                        || global_id_wo_offset[1]
+                                        >= global_size[1]
+                                        || global_id_wo_offset[2]
+                                        >= global_size[2])
+                                        break;
+
+                                    const size_t global_linear_id =
+                                    global_id_wo_offset[2] * global_size[1]
+                                    * global_size[0]
+                                    + global_id_wo_offset[1] * global_size[0]
+                                    + global_id_wo_offset[0];
+                                    const size_t local_linear_id =
+                                    local_id[2] * local_size[1] * local_size[0]
+                                    + local_id[1] * local_size[0] + local_id[0];
+
+                                    const output_type &o =
+                                    output[global_linear_id];
+
+                                    CHECK_EQUAL(o.work_dim, dim, "get_work_dim")
+                                    for (int d = 0; d < 3; d++)
+                                    {
+                                        CHECK_EQUAL(o.global_size[d],
+                                                    global_size[d],
+                                                    "get_global_size")
+                                        CHECK_EQUAL(o.global_id[d],
+                                                    global_id[d],
+                                                    "get_global_id")
+                                        CHECK_EQUAL(o.local_size[d],
+                                                    local_size[d],
+                                                    "get_local_size")
+                                        CHECK_EQUAL(o.enqueued_local_size[d],
+                                                    enqueued_local_size[d],
+                                                    "get_enqueued_local_size")
+                                        CHECK_EQUAL(o.local_id[d], local_id[d],
+                                                    "get_local_id")
+                                        CHECK_EQUAL(o.num_groups[d],
+                                                    num_groups[d],
+                                                    "get_num_groups")
+                                        CHECK_EQUAL(o.group_id[d], group_id[d],
+                                                    "get_group_id")
+                                        CHECK_EQUAL(o.global_offset[d],
+                                                    global_offset[d],
+                                                    "get_global_offset")
+                                    }
+
+                                    CHECK_EQUAL(o.global_linear_id,
+                                                global_linear_id,
+                                                "get_global_linear_id")
+                                    CHECK_EQUAL(o.local_linear_id,
+                                                local_linear_id,
+                                                "get_local_linear_id")
+
+                                    // A few (but not all possible) sub-groups
+                                    // related checks
+                                    if (check_sub_groups)
+                                    {
+                                        if (check_sub_groups_limits)
+                                        {
+                                            CHECK_EQUAL(
+                                            o.max_sub_group_size,
+                                            max_sub_group_size_for_ndrange,
+                                            "get_max_sub_group_size")
+                                            CHECK_EQUAL(
+                                            o.enqueued_num_sub_groups,
+                                            sub_group_count_for_ndrange,
+                                            "get_enqueued_num_sub_groups")
+                                        }
+                                        CHECK(o.sub_group_size == 0
+                                              || o.sub_group_size
+                                              > o.max_sub_group_size,
+                                              "get_sub_group_size or "
+                                              "get_max_sub_group_size")
+                                        CHECK(o.num_sub_groups == 0
+                                              || o.num_sub_groups
+                                              > o.enqueued_num_sub_groups,
+                                              "get_enqueued_num_sub_groups")
+                                        CHECK(o.sub_group_id
+                                              >= o.num_sub_groups,
+                                              "get_sub_group_id or "
+                                              "get_num_sub_groups")
+                                        CHECK(o.sub_group_local_id
+                                              >= o.sub_group_size,
+                                              "get_sub_group_local_id or "
+                                              "get_sub_group_size")
+                                    }
+                                }
                     }
-                }
-            }
         }
     }
 
@@ -394,7 +458,8 @@ int test_workitems(cl_device_id device, cl_context context, cl_command_queue que
 #undef CHECK
 
 AUTO_TEST_CASE(test_workitems_uniform)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.uniform_work_group_size = true;
@@ -404,7 +469,8 @@ AUTO_TEST_CASE(test_workitems_uniform)
 }
 
 AUTO_TEST_CASE(test_workitems_non_uniform)
-(cl_device_id device, cl_context context, cl_command_queue queue, int num_elements)
+(cl_device_id device, cl_context context, cl_command_queue queue,
+ int num_elements)
 {
     test_options options;
     options.uniform_work_group_size = false;

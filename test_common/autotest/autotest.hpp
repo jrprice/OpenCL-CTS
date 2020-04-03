@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,21 +18,26 @@
 
 #include "test_suite.hpp"
 
-#define STR_JOIN( X, Y ) STR_DO_JOIN( X, Y )
-#define STR_DO_JOIN( X, Y ) STR_DO_JOIN_2(X,Y)
-#define STR_DO_JOIN_2( X, Y ) X##Y
+#define STR_JOIN(X, Y) STR_DO_JOIN(X, Y)
+#define STR_DO_JOIN(X, Y) STR_DO_JOIN_2(X, Y)
+#define STR_DO_JOIN_2(X, Y) X##Y
 
 
 // How to use AUTO_TEST_CASE macro:
 //
-// AUTO_TEST_CASE(<test_case_name>)(cl_device_id device, cl_context context, cl_command_queue queue, int n_elems)
+// AUTO_TEST_CASE(<test_case_name>)(cl_device_id device, cl_context context,
+// cl_command_queue queue, int n_elems)
 // {
 //      (test case code...)
 // }
 //
-#define AUTO_TEST_CASE(name) \
-    struct name { static int run_test(cl_device_id, cl_context, cl_command_queue, int); }; \
-    static autotest::detail::test_case_registration STR_JOIN(name, STR_JOIN(_registration, __LINE__)) (#name, name::run_test); \
+#define AUTO_TEST_CASE(name)                                                   \
+    struct name                                                                \
+    {                                                                          \
+        static int run_test(cl_device_id, cl_context, cl_command_queue, int);  \
+    };                                                                         \
+    static autotest::detail::test_case_registration STR_JOIN(                  \
+    name, STR_JOIN(_registration, __LINE__))(#name, name::run_test);           \
     int name::run_test
 
-#endif //TEST_COMMON_AUTOTEST_AUTOTEST_HPP
+#endif // TEST_COMMON_AUTOTEST_AUTOTEST_HPP

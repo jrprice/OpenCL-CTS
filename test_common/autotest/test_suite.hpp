@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2017 The Khronos Group Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,15 @@
 #define TEST_COMMON_AUTOTEST_TEST_SUITE_HPP
 
 #include <vector>
-#include <string> 
+#include <string>
 
 namespace autotest {
 
-struct test_suite {
-    test_suite(const std::string& name)
-        : name(name)
-    {
+struct test_suite
+{
+    test_suite(const std::string& name): name(name) {}
 
-    } 
-
-    void add(const test_definition& td)
-    {
-        test_defs.push_back(td);
-    }    
+    void add(const test_definition& td) { test_defs.push_back(td); }
 
     // List of test definitions
     std::vector<test_definition> test_defs;
@@ -47,13 +41,14 @@ struct test_suite {
 
 namespace detail {
 
-struct test_case_registration
-{
-    test_case_registration(const std::string& name, const basefn ptr)
+    struct test_case_registration
     {
-        ::autotest::test_suite::global_test_suite().add(test_definition({ptr, strdup(name.c_str())}));
-    }
-};
+        test_case_registration(const std::string& name, const basefn ptr)
+        {
+            ::autotest::test_suite::global_test_suite().add(
+            test_definition({ ptr, strdup(name.c_str()) }));
+        }
+    };
 
 } // end detail namespace
 } // end autotest namespace

@@ -1,14 +1,16 @@
 /******************************************************************
 Copyright (c) 2016 The Khronos Group Inc. All Rights Reserved.
 
-This code is protected by copyright laws and contains material proprietary to the Khronos Group, Inc.
-This is UNPUBLISHED PROPRIETARY SOURCE CODE that may not be disclosed in whole or in part to
-third parties, and may not be reproduced, republished, distributed, transmitted, displayed,
-broadcast or otherwise exploited in any manner without the express prior written permission
-of Khronos Group. The receipt or possession of this code does not convey any rights to reproduce,
-disclose, or distribute its contents, or to manufacture, use, or sell anything that it may describe,
-in whole or in part other than under the terms of the Khronos Adopters Agreement
-or Khronos Conformance Test Source License Agreement as executed between Khronos and the recipient.
+This code is protected by copyright laws and contains material proprietary to
+the Khronos Group, Inc. This is UNPUBLISHED PROPRIETARY SOURCE CODE that may not
+be disclosed in whole or in part to third parties, and may not be reproduced,
+republished, distributed, transmitted, displayed, broadcast or otherwise
+exploited in any manner without the express prior written permission of Khronos
+Group. The receipt or possession of this code does not convey any rights to
+reproduce, disclose, or distribute its contents, or to manufacture, use, or sell
+anything that it may describe, in whole or in part other than under the terms of
+the Khronos Adopters Agreement or Khronos Conformance Test Source License
+Agreement as executed between Khronos and the recipient.
 ******************************************************************/
 
 #include "testBase.h"
@@ -17,21 +19,19 @@ or Khronos Conformance Test Source License Agreement as executed between Khronos
 #include <sstream>
 #include <string>
 
-template<typename T>
-int test_fmath(cl_device_id deviceID,
-               cl_context context,
-               cl_command_queue queue,
-               const char *spvName,
-               const char *funcName,
-               const char *Tname,
-               bool fast_math,
-               std::vector<T> &h_lhs,
-               std::vector<T> &h_rhs)
+template <typename T>
+int test_fmath(cl_device_id deviceID, cl_context context,
+               cl_command_queue queue, const char *spvName,
+               const char *funcName, const char *Tname, bool fast_math,
+               std::vector<T> &h_lhs, std::vector<T> &h_rhs)
 {
 
-    if(std::string(Tname).find("double") != std::string::npos) {
-        if(!is_extension_available(deviceID, "cl_khr_fp64")) {
-            log_info("Extension cl_khr_fp64 not supported; skipping double tests.\n");
+    if (std::string(Tname).find("double") != std::string::npos)
+    {
+        if (!is_extension_available(deviceID, "cl_khr_fp64"))
+        {
+            log_info(
+            "Extension cl_khr_fp64 not supported; skipping double tests.\n");
             return 0;
         }
     }
@@ -39,16 +39,20 @@ int test_fmath(cl_device_id deviceID,
     int num = (int)h_lhs.size();
     size_t bytes = num * sizeof(T);
 
-    clMemWrapper lhs = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+    clMemWrapper lhs =
+    clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create lhs buffer");
 
-    err = clEnqueueWriteBuffer(queue, lhs, CL_TRUE, 0, bytes, &h_lhs[0], 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(queue, lhs, CL_TRUE, 0, bytes, &h_lhs[0], 0,
+                               NULL, NULL);
     SPIRV_CHECK_ERROR(err, "Failed to copy to lhs buffer");
 
-    clMemWrapper rhs = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
+    clMemWrapper rhs =
+    clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create rhs buffer");
 
-    err = clEnqueueWriteBuffer(queue, rhs, CL_TRUE, 0, bytes, &h_rhs[0], 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(queue, rhs, CL_TRUE, 0, bytes, &h_rhs[0], 0,
+                               NULL, NULL);
     SPIRV_CHECK_ERROR(err, "Failed to copy to rhs buffer");
 
     std::string kernelStr;
@@ -56,9 +60,12 @@ int test_fmath(cl_device_id deviceID,
     {
         std::stringstream kernelStream;
 
-        if (is_double<T>::value) {
+        if (is_double<T>::value)
+        {
             kernelStream << "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
-        } else if (sizeof(T) == sizeof(cl_half)) {
+        }
+        else if (sizeof(T) == sizeof(cl_half))
+        {
             kernelStream << "#pragma OPENCL EXTENSION cl_khr_fp16 : enable\n";
         }
 
@@ -68,8 +75,8 @@ int test_fmath(cl_device_id deviceID,
         kernelStream << "#define spirv_fdiv(a, b) (a) / (b)               \n";
         kernelStream << "#define spirv_frem(a, b) fmod(a, b)              \n";
         kernelStream << "#define spirv_fmod(a, b) copysign(fmod(a,b),b)   \n";
-        kernelStream << "#define T " << Tname                         << "\n";
-        kernelStream << "#define FUNC spirv_" << funcName             << "\n";
+        kernelStream << "#define T " << Tname << "\n";
+        kernelStream << "#define FUNC spirv_" << funcName << "\n";
         kernelStream << "__kernel void fmath_cl(__global T *out,          \n";
         kernelStream << "const __global T *lhs, const __global T *rhs)    \n";
         kernelStream << "{                                                \n";
@@ -89,7 +96,8 @@ int test_fmath(cl_device_id deviceID,
     {
         // Run the cl kernel for reference results
         clProgramWrapper prog;
-        err = create_single_kernel_helper_create_program(context, &prog, 1, &kernelBuf, NULL);
+        err = create_single_kernel_helper_create_program(context, &prog, 1,
+                                                         &kernelBuf, NULL);
         SPIRV_CHECK_ERROR(err, "Failed to create cl program");
 
         err = clBuildProgram(prog, 1, &deviceID, NULL, NULL, NULL);
@@ -98,7 +106,8 @@ int test_fmath(cl_device_id deviceID,
         clKernelWrapper kernel = clCreateKernel(prog, "fmath_cl", &err);
         SPIRV_CHECK_ERROR(err, "Failed to create cl kernel");
 
-        clMemWrapper ref = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
+        clMemWrapper ref =
+        clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
         SPIRV_CHECK_ERROR(err, "Failed to create ref buffer");
 
         err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &ref);
@@ -111,10 +120,12 @@ int test_fmath(cl_device_id deviceID,
         SPIRV_CHECK_ERROR(err, "Failed to set arg 2");
 
         size_t global = num;
-        err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+        err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0,
+                                     NULL, NULL);
         SPIRV_CHECK_ERROR(err, "Failed to enqueue cl kernel");
 
-        err = clEnqueueReadBuffer(queue, ref, CL_TRUE, 0, bytes, &h_ref[0], 0, NULL, NULL);
+        err = clEnqueueReadBuffer(queue, ref, CL_TRUE, 0, bytes, &h_ref[0], 0,
+                                  NULL, NULL);
         SPIRV_CHECK_ERROR(err, "Failed to read from ref");
     }
 
@@ -125,7 +136,8 @@ int test_fmath(cl_device_id deviceID,
     clKernelWrapper kernel = clCreateKernel(prog, "fmath_spv", &err);
     SPIRV_CHECK_ERROR(err, "Failed to create spv kernel");
 
-    clMemWrapper res = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    clMemWrapper res =
+    clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
     SPIRV_CHECK_ERROR(err, "Failed to create res buffer");
 
     err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &res);
@@ -138,15 +150,19 @@ int test_fmath(cl_device_id deviceID,
     SPIRV_CHECK_ERROR(err, "Failed to set arg 2");
 
     size_t global = num;
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global, NULL, 0, NULL,
+                                 NULL);
     SPIRV_CHECK_ERROR(err, "Failed to enqueue cl kernel");
 
     std::vector<T> h_res(num);
-    err = clEnqueueReadBuffer(queue, res, CL_TRUE, 0, bytes, &h_res[0], 0, NULL, NULL);
+    err = clEnqueueReadBuffer(queue, res, CL_TRUE, 0, bytes, &h_res[0], 0, NULL,
+                              NULL);
     SPIRV_CHECK_ERROR(err, "Failed to read from ref");
 
-    for (int i = 0; i < num; i++) {
-        if (h_res[i] != h_ref[i]) {
+    for (int i = 0; i < num; i++)
+    {
+        if (h_res[i] != h_ref[i])
+        {
             log_error("Values do not match at location %d\n", i);
             return -1;
         }
@@ -154,43 +170,41 @@ int test_fmath(cl_device_id deviceID,
     return 0;
 }
 
-#define TEST_FMATH_FUNC(TYPE, FUNC, MODE)           \
-    TEST_SPIRV_FUNC(op_##FUNC##_##TYPE##_##MODE)    \
-    {                                               \
-        if (sizeof(cl_##TYPE) == 2) {               \
-            PASSIVE_REQUIRE_FP16_SUPPORT(deviceID); \
-        }                                           \
-        const int num = 1 << 20;                    \
-        std::vector<cl_##TYPE> lhs(num);            \
-        std::vector<cl_##TYPE> rhs(num);            \
-                                                    \
-        RandomSeed seed(gRandomSeed);               \
-                                                    \
-        for (int i = 0; i < num; i++) {             \
-            lhs[i] = genrandReal<cl_##TYPE>(seed);  \
-            rhs[i] = genrandReal<cl_##TYPE>(seed);  \
-        }                                           \
-                                                    \
-        const char *mode = #MODE;                   \
-        return test_fmath(deviceID, context, queue, \
-                          #FUNC "_" #TYPE,          \
-                          #FUNC,                    \
-                          #TYPE,                    \
-                          mode[0] == 'f',           \
-                          lhs, rhs);                \
+#define TEST_FMATH_FUNC(TYPE, FUNC, MODE)                                      \
+    TEST_SPIRV_FUNC(op_##FUNC##_##TYPE##_##MODE)                               \
+    {                                                                          \
+        if (sizeof(cl_##TYPE) == 2)                                            \
+        {                                                                      \
+            PASSIVE_REQUIRE_FP16_SUPPORT(deviceID);                            \
+        }                                                                      \
+        const int num = 1 << 20;                                               \
+        std::vector<cl_##TYPE> lhs(num);                                       \
+        std::vector<cl_##TYPE> rhs(num);                                       \
+                                                                               \
+        RandomSeed seed(gRandomSeed);                                          \
+                                                                               \
+        for (int i = 0; i < num; i++)                                          \
+        {                                                                      \
+            lhs[i] = genrandReal<cl_##TYPE>(seed);                             \
+            rhs[i] = genrandReal<cl_##TYPE>(seed);                             \
+        }                                                                      \
+                                                                               \
+        const char *mode = #MODE;                                              \
+        return test_fmath(deviceID, context, queue, #FUNC "_" #TYPE, #FUNC,    \
+                          #TYPE, mode[0] == 'f', lhs, rhs);                    \
     }
 
-#define TEST_FMATH_MODE(TYPE, MODE)             \
-    TEST_FMATH_FUNC(TYPE, fadd, MODE)           \
-    TEST_FMATH_FUNC(TYPE, fsub, MODE)           \
-    TEST_FMATH_FUNC(TYPE, fmul, MODE)           \
-    TEST_FMATH_FUNC(TYPE, fdiv, MODE)           \
-    TEST_FMATH_FUNC(TYPE, frem, MODE)           \
-    TEST_FMATH_FUNC(TYPE, fmod, MODE)           \
+#define TEST_FMATH_MODE(TYPE, MODE)                                            \
+    TEST_FMATH_FUNC(TYPE, fadd, MODE)                                          \
+    TEST_FMATH_FUNC(TYPE, fsub, MODE)                                          \
+    TEST_FMATH_FUNC(TYPE, fmul, MODE)                                          \
+    TEST_FMATH_FUNC(TYPE, fdiv, MODE)                                          \
+    TEST_FMATH_FUNC(TYPE, frem, MODE)                                          \
+    TEST_FMATH_FUNC(TYPE, fmod, MODE)
 
-#define TEST_FMATH_TYPE(TYPE)                   \
-    TEST_FMATH_MODE(TYPE, regular)              \
-    TEST_FMATH_MODE(TYPE, fast)                 \
+#define TEST_FMATH_TYPE(TYPE)                                                  \
+    TEST_FMATH_MODE(TYPE, regular)                                             \
+    TEST_FMATH_MODE(TYPE, fast)
 
 TEST_FMATH_TYPE(float)
 TEST_FMATH_TYPE(double)
